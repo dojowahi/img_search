@@ -1,0 +1,73 @@
+# Version control
+.git
+.gitignore
+.github
+
+# Editor directories and files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Environment and local configuration
+.env
+.env.*
+venv
+env
+__pycache__
+*.py[cod]
+*$py.class
+.pytest_cache
+.coverage
+htmlcov
+.mypy_cache
+
+# Local storage directories
+uploads/
+chroma/
+chroma_db/
+tmp/
+tmp_uploads/
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Docker and deployment files
+Dockerfile
+.dockerignore
+cloudbuild.yaml
+docker-compose.yml
+
+# Documentation
+README.md
+LICENSE
+docs/
+examples/
+
+# Test directories
+tests/
+
+# Database files
+*.sqlite
+*.db
+
+# Large data files and credentials
+data/
+key.json
+*key*.json
+credentials/
+bulk_*.json
+*.json
+!requirements.json
+
+# Build artifacts
+*.egg-info/
+dist/
+build/
+
+# Other application-specific files to exclude
+.ipynb_checkpoints
+node_modules
