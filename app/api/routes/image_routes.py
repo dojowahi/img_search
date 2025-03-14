@@ -239,7 +239,7 @@ async def get_image(image_id: str, request: Request):
     raise HTTPException(status_code=404, detail="Image not found")
 
 @router.post("/generate_tags/{image_id}", response_class=HTMLResponse)
-async def generate_tags(request: Request, image_id: str):
+async def generate_tags(request: Request, image_id: str, simple: int =1):
     """
     Generate tags for an image using an LLM
     
@@ -263,9 +263,14 @@ async def generate_tags(request: Request, image_id: str):
         
         # Call the LLM to generate tags
         logger.info(f"Generating tags for image: {image_id}")
+        prompt = """You are an retail merchandising expert capable of describing, categorizing, and answering questions about products for a retail catalog"""
         
-    
-        tags_json = await llm_service.generate_image_tags(image_url)
+        if simple==1:
+            response_schema = {"type":"object","properties":{"tagline":{"type":"string","description":"Suggest a catchy line for the product"},"Color":{"type":"string","description":"What is the main color?"},"Name":{"type":"string","description":"Suggest a name?"},"product_description":{"type":"string","description":"A detailed description of the product"}},"required":["Name","Color","tagline","product_description"]}
+        else:
+            response_schema={"type":"object","properties":{"product_category":{"type":"string","description":"Suggest the top category and its top 50 to 80 retail selling and supply chain attributes from the image.The category hierarchy must be 4 levels deep, separated by >  character"},"attribute_table":{"type":"array","items":{"type":"object","properties":{"attr_name":{"type":"string","description":"Name of the product attribute which will be analyzed"},"attr_desc":{"type":"string","description":"Describe the attribute"},"value_range":{"type":"string","description":"Is a list of values the attribute can have.Display it as array of string"}},"required":["attr_desc","attr_name","value_range"]},"description":"Table listing product attributes and details."}},"required":["product_category","attribute_table"]}
+
+        tags_json = await llm_service.generate_image_tags(image_url,prompt,response_schema)
     
         
         # Return the tags template

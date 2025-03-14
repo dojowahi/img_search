@@ -15,7 +15,7 @@ class LLMService:
     def __init__(self):
         pass
         
-    async def generate_image_tags(self, image_url: str) -> Optional[Dict[str, Any]]:
+    async def generate_image_tags(self, image_url: str, prompt:str, response_schema:dict) -> Optional[Dict[str, Any]]:
         """
         Generate tags for an image using an LLM
         
@@ -29,8 +29,8 @@ class LLMService:
             client = genai.Client(vertexai=True, project=settings.GCP_PROJECT_ID, location=settings.GCP_REGION)
 
             image = Part.from_uri(file_uri=image_url, mime_type="image/jpg")
-            response_schema = {"type": "object", "properties": {"TagLine": {"type": "string", "description": "Suggest a tag line"}, "Color": {"type": "string", "description": "What is the main color?"}, "Name": {"type": "string", "description": "Suggest a name?"}},"required": ["Name","Color","TagLine"]}
-            prompt = "Analyze this image"
+            # response_schema = {"type":"object","properties":{"tagline":{"type":"string","description":"Suggest a catchy line for the product"},"Color":{"type":"string","description":"What is the main color?"},"Name":{"type":"string","description":"Suggest a name?"},"product_description":{"type":"string","description":"A detailed description of the product"}},"required":["Name","Color","tagline","product_description"]}
+            # prompt = """You are an retail merchandising expert capable of describing, categorizing, and answering questions about products for a retail catalog"""
             response = client.models.generate_content(
                 model='gemini-2.0-flash',
                 contents=[
@@ -52,5 +52,6 @@ class LLMService:
                 "title": "Error generating tags",
                 "description": "There was an error generating tags for this image."
             }
+    
 
 llm_service = LLMService()
