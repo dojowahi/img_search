@@ -10,7 +10,7 @@
         <div class="border rounded-lg overflow-hidden bg-gray-50 image-card">
             <div class="h-48 overflow-hidden relative">
                 <!-- <img src="{{ image.url }}" alt="{{ image.filename }}" class="w-full h-full object-cover"> -->
-                <img src="/api/v1/proxy_image/{{ result.id }}" alt="{{ result.filename }}" class="w-full h-full object-cover">
+                <img src="/api/v1/proxy_image/{{ image.id }}" alt="{{ image.filename }}" class="w-full h-full object-cover">
             </div>
             <div class="p-3">
                 <p class="font-medium text-gray-800 truncate">{{ image.filename }}</p>

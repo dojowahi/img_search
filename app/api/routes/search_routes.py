@@ -8,8 +8,11 @@ from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
+from app.core.brand import BRAND_CONFIG
 from app.models.schemas import SearchResponse, SearchResult
-from app.services.embedding import embedding_service
+
+# from app.services.embedding import embedding_service
+from app.services.embedding_model import get_embedding_service
 from app.services.storage.gcs import gcs_storage_service
 from app.services.vector_db import get_vector_db_service
 
@@ -26,20 +29,22 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 async def search_by_text(
     request: Request,
     query: str, 
-    limit: int = Query(5, ge=1, le=100)
+    limit: int = Query(3, ge=1, le=100)
 ):
     """
     Search for images similar to a text query
     """
     try:
         vector_db_service = get_vector_db_service()
+        embedding_service = get_embedding_service()
+        brand = request.headers.get("X-Brand", "target")
         
         # Log the search query
         logger.info(f"Text search request: '{query}' with limit {limit}")
         
         # Create text embedding with retries
         start_time = time.time()
-        text_embedding = embedding_service.create_text_embedding(query, max_retries=3)
+        text_embedding = embedding_service.create_text_embedding(query)
         logger.info(f"Text embedding created in {time.time() - start_time:.2f}s")
         
         # Normalize the text embedding (critical for cosine similarity)
@@ -86,9 +91,9 @@ async def search_by_text(
         # Handle HTMX request
         if "HX-Request" in request.headers:
             return templates.TemplateResponse(
-                "partials/search_results.html",
-                {"request": request, "results": results}
-            )
+            f"{brand}/partials/search_results.html",
+            {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
+        )
         
         # Normal API response
         return SearchResponse(results=results)
@@ -119,7 +124,7 @@ async def search_by_text(
 async def search_by_image(
     request: Request,
     file: UploadFile = File(...), 
-    limit: int = Query(5, ge=1, le=100)
+    limit: int = Query(3, ge=1, le=100)
 ):
     """
     Search for images similar to an uploaded image
@@ -134,7 +139,11 @@ async def search_by_image(
     need_cleanup = False
     
     try:
+        brand = request.headers.get("X-Brand", "target")
+
         vector_db_service = get_vector_db_service()
+        embedding_service =  get_embedding_service()
+
         
         # Validate file type
         if not file.content_type.startswith("image/"):
@@ -182,9 +191,9 @@ async def search_by_image(
         # Handle HTMX request
         if "HX-Request" in request.headers:
             return templates.TemplateResponse(
-                "partials/search_results.html",
-                {"request": request, "results": results}
-            )
+            f"{brand}/partials/search_results.html",
+            {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
+        )
         
         # Normal API response
         return SearchResponse(results=results)
@@ -247,6 +256,8 @@ async def get_search_stats(request: Request):
 async def debug_search(query: str = "test", limit: int = 5):
     """Debug endpoint to test raw search queries"""
     vector_db_service = get_vector_db_service()
+    embedding_service =  get_embedding_service()
+
     
     # Create the text embedding
     text_embedding = embedding_service.create_text_embedding(query)

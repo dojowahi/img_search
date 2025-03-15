@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Dynamic title that includes brand name -->
+    <title>{% block title %}{{ brand_config.name }} Image Search{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Dynamic brand color configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                primary: '{{ brand_config.colors.primary }}',
+                secondary: '{{ brand_config.colors.secondary }}',
+                accent: '{{ brand_config.colors.accent }}',
+                text: '{{ brand_config.colors.text }}'
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- HTMX for interactive features -->
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    
+    <!-- Shared CSS across brands -->
+    <style>
+        /* Common styles for indicators, animations, etc. */
+        .htmx-indicator {
+            opacity: 0;
+            transition: opacity 200ms ease-in;
+        }
+        .htmx-request .htmx-indicator {
+            opacity: 1;
+        }
+        .image-card {
+            transition: transform 0.2s ease-in-out;
+        }
+        .image-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+    
+    <!-- Slot for brand-specific CSS -->
+    {% block additional_css %}{% endblock %}
+</head>
+<body class="bg-white">
+    <div class="container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header slot - can be customized per brand -->
+        {% block header %}
+        <header class="mb-8 text-center bg-brand-primary rounded-lg p-6 shadow-md">
+            <!-- Brand logo if available -->
+            {% if brand_config.logo %}
+            <img src="{{ brand_config.logo }}" alt="{{ brand_config.name }}" class="h-10 mx-auto mb-3">
+            {% endif %}
+            
+            <h1 class="text-4xl font-bold text-white mb-2">{{ brand_config.name }} Image Search</h1>
+            <p class="text-lg text-white opacity-90">Find images using text or image similarity</p>
+        </header>
+        {% endblock %}
+        
+        <!-- Main content slot -->
+        {% block content %}
+        <!-- Will be replaced by brand-specific content -->
+        {% endblock %}
+        
+        <!-- Results area - consistent across brands -->
+        <div id="results-area" class="mt-8">
+            {% block results %}{% endblock %}
+        </div>
+    </div>
+    
+    <!-- Shared JavaScript -->
+    {% block common_js %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof switchTab === 'function') {
+                switchTab('text-search');
+            }
+        });
+    </script>
+    {% endblock %}
+    
+    <!-- Brand-specific JavaScript slot -->
+    {% block additional_js %}{% endblock %}
+</body>
+</html>

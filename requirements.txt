@@ -12,3 +12,5 @@ python-dotenv>=1.0.0
 google-genai
 pydantic-settings
 psycopg2-binary
+moviepy
+google-cloud-aiplatform

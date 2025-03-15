@@ -1,0 +1,195 @@
+{% extends "base/layout.html" %}
+
+{% block title %}Target Image Search{% endblock %}
+
+{% block additional_css %}
+<style>
+    /* Target-specific styles */
+    .image-card:hover {
+        box-shadow: 0 10px 15px -3px rgba(204, 0, 0, 0.1), 0 4px 6px -2px rgba(204, 0, 0, 0.05);
+    }
+    
+    /* Additional Target styling customizations */
+    .target-header {
+        background-color: #CC0000;
+        color: white;
+    }
+    
+    /* Map brand colors to Target-specific naming for backward compatibility */
+    .text-target-red { color: #CC0000; }
+    .bg-target-red { background-color: #CC0000; }
+    .border-target-red { border-color: #CC0000; }
+    .text-target-dark { color: #990000; }
+    .bg-target-dark { background-color: #990000; }
+    .ring-target-red { --tw-ring-color: #CC0000; }
+    .hover\:bg-target-dark:hover { background-color: #990000; }
+    .focus\:ring-target-red:focus { --tw-ring-color: #CC0000; }
+    .focus\:border-target-red:focus { border-color: #CC0000; }
+    .bg-target-gray { background-color: #F5F5F5; }
+    .text-target-text { color: #333333; }
+</style>
+{% endblock %}
+
+{% block header %}
+<!-- Target-themed Header -->
+<header class="mb-8 text-center bg-brand-primary rounded-lg p-6 shadow-md">
+    <h1 class="text-4xl font-bold text-white mb-2">Target Image Search</h1>
+    <p class="text-lg text-white opacity-90">Find images using text or image similarity</p>
+</header>
+{% endblock %}
+
+{% block content %}
+<!-- Main tabs -->
+<div class="mb-8 bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+    <div class="flex border-b">
+        <!-- Search tabs -->
+        <button 
+            class="px-6 py-3 w-1/2 text-center font-medium text-brand-primary border-b-2 border-brand-primary bg-white"
+            id="tab-text-search"
+            onclick="switchTab('text-search')">
+            Text Search
+        </button>
+        <button 
+            class="px-6 py-3 w-1/2 text-center font-medium text-gray-500 hover:text-brand-primary bg-gray-50"
+            id="tab-image-search"
+            onclick="switchTab('image-search')">
+            Image Search
+        </button>
+    </div>
+    
+    <!-- Text Search Section - Set to visible by default -->
+    <div id="text-search-section" class="p-6">
+        <div class="bg-gray-50 border-l-4 border-brand-primary p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-brand-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-gray-800">
+                        Search our image database using natural language descriptions.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <form hx-get="/api/v1/search_by_text/"
+              hx-headers='{"X-Brand": "target"}'
+              hx-target="#results-area"
+              hx-indicator="#text-search-indicator"
+              class="space-y-4">
+            <div>
+                <label for="query" class="block text-sm font-medium text-gray-700 mb-1">
+                    What are you looking for?
+                </label>
+                <input type="text" 
+                       name="query" 
+                       required
+                       placeholder="Enter search terms..."
+                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
+            </div>
+            <div>
+                <label for="limit" class="block text-sm font-medium text-gray-700 mb-1">
+                    Maximum results
+                </label>
+                <input type="number" 
+                       name="limit" 
+                       value="3"
+                       min="1" 
+                       max="10"
+                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+                    Search
+                </button>
+                <div id="text-search-indicator" class="htmx-indicator flex items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-brand-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Searching...</span>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Image Search Section -->
+    <div id="image-search-section" class="p-6 hidden">
+        <form hx-encoding="multipart/form-data"
+              hx-post="/api/v1/search_by_image/"
+              hx-headers='{"X-Brand": "target"}'
+              hx-target="#results-area"
+              hx-indicator="#image-search-indicator"
+              class="space-y-4">
+            <div>
+                <label for="file" class="block text-sm font-medium text-gray-700 mb-1">
+                    Select image to search with
+                </label>
+                <input type="file" 
+                       name="file" 
+                       required
+                       accept="image/*"
+                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
+            </div>
+            <div>
+                <label for="limit" class="block text-sm font-medium text-gray-700 mb-1">
+                    Maximum results
+                </label>
+                <input type="number" 
+                       name="limit" 
+                       value="3"
+                       min="1" 
+                       max="10"
+                       class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <button type="submit" 
+                        class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+                    Find Similar Images
+                </button>
+                <div id="image-search-indicator" class="htmx-indicator flex items-center">
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-brand-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Searching...</span>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional_js %}
+<script>
+    function switchTab(tabName) {
+        // Hide all sections
+        document.getElementById('text-search-section').classList.add('hidden');
+        document.getElementById('image-search-section').classList.add('hidden');
+        
+        // Reset all tab buttons
+        document.getElementById('tab-text-search').classList.remove('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
+        document.getElementById('tab-text-search').classList.add('text-gray-500', 'bg-gray-50');
+        
+        document.getElementById('tab-image-search').classList.remove('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
+        document.getElementById('tab-image-search').classList.add('text-gray-500', 'bg-gray-50');
+        
+        // Show selected section and highlight tab
+        if (tabName === 'text-search') {
+            document.getElementById('text-search-section').classList.remove('hidden');
+            document.getElementById('tab-text-search').classList.remove('text-gray-500', 'bg-gray-50');
+            document.getElementById('tab-text-search').classList.add('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
+        } else if (tabName === 'image-search') {
+            document.getElementById('image-search-section').classList.remove('hidden');
+            document.getElementById('tab-image-search').classList.remove('text-gray-500', 'bg-gray-50');
+            document.getElementById('tab-image-search').classList.add('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
+        }
+        
+        // Clear results area
+        document.getElementById('results-area').innerHTML = '';
+    }
+</script>
+{% endblock %}

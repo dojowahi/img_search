@@ -1,6 +1,7 @@
 import logging
 
-from app.services.embedding import embedding_service
+# from app.services.embedding import embedding_service
+from app.services.embedding_model import get_embedding_service
 from app.services.storage.gcs import gcs_storage_service
 from app.services.vector_db import get_vector_db_service
 
@@ -14,6 +15,7 @@ async def startup_event():
     try:
         # Initialize embedding service
         logger.info("Initializing embedding service...")
+        embedding_service = get_embedding_service()
         await embedding_service.initialize()
         
         # Initialize storage service

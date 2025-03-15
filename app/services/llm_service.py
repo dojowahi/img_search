@@ -52,6 +52,35 @@ class LLMService:
                 "title": "Error generating tags",
                 "description": "There was an error generating tags for this image."
             }
+        
+    async def video_analysis(self,yt_url:str,prompt:str,response_schema:str):
+        
+        try:
+            client = genai.Client(vertexai=True, project=settings.GCP_PROJECT_ID, location=settings.GCP_REGION)
+
+            fileData = Part.from_uri(yt_url,"video/*")
+        
+            response = client.models.generate_content(
+                    model='gemini-2.0-flash',
+                    contents=[
+                        fileData,
+                        prompt,
+                    ],
+                config=GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=response_schema,
+                ),
+            )
+            tags = response.text
+            return tags
+        
+        except Exception as e:
+            logger.error(f"Error analyzing youtube URL with LLM: {str(e)}")
+            return {
+                "error": f"Failed to analyze Youtube URL: {str(e)}",
+                "title": "Error generating timestamps",
+                "description": f"There was an error generating timestamps for this {yt_url}."
+            }
     
 
 llm_service = LLMService()

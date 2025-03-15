@@ -7,13 +7,14 @@ from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter, File, HTTPException, Request, Response, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.models.schemas import HealthResponse, UploadResponse, UploadResult
-from app.services.embedding import embedding_service
-from app.services.llm_service import llm_service
+
+# from app.services.embedding import embedding_service
+from app.services.embedding_model import get_embedding_service
 from app.services.storage.gcs import gcs_storage_service
 from app.services.vector_db import get_vector_db_service
 
@@ -41,6 +42,7 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)):
     Returns a list of uploaded image IDs and their URLs
     """
     vector_db_service = get_vector_db_service()
+    embedding_service = get_embedding_service()
     uploaded_ids = []
     
     for file in files:
@@ -57,6 +59,7 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)):
             temp_file_path, need_cleanup = await gcs_storage_service.save_upload(file)
             
             # Create embedding
+            # embedding = embedding_service.create_image_embedding(temp_file_path)
             embedding = embedding_service.create_image_embedding(temp_file_path)
             
             # Generate a unique ID for the image
@@ -112,7 +115,7 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)):
             return Response(content=error_html, media_type="text/html")
         
         return templates.TemplateResponse(
-            "partials/upload_results.html",
+            "upload_results.html",
             {"request": request, "uploaded_images": uploaded_ids}
         )
     
@@ -238,59 +241,6 @@ async def get_image(image_id: str, request: Request):
     
     raise HTTPException(status_code=404, detail="Image not found")
 
-@router.post("/generate_tags/{image_id}", response_class=HTMLResponse)
-async def generate_tags(request: Request, image_id: str, simple: int =1):
-    """
-    Generate tags for an image using an LLM
-    
-    - Takes an image ID
-    - Retrieves the image URL from storage
-    - Calls an LLM to generate tags based on the image
-    
-    Returns HTML with the generated tags JSON
-    """
-    try:
-        # Get the GCS URL for the image
-        image_url = gcs_storage_service.get_public_url(image_id)
-        logger.info(f"Image URL for tag generation:{image_url}")
-        if not image_url:
-            if "HX-Request" in request.headers:
-                return templates.TemplateResponse(
-                    "partials/image_tags.html",
-                    {"request": request, "error": "Image not found"}
-                )
-            raise HTTPException(status_code=404, detail="Image not found")
-        
-        # Call the LLM to generate tags
-        logger.info(f"Generating tags for image: {image_id}")
-        prompt = """You are an retail merchandising expert capable of describing, categorizing, and answering questions about products for a retail catalog"""
-        
-        if simple==1:
-            response_schema = {"type":"object","properties":{"tagline":{"type":"string","description":"Suggest a catchy line for the product"},"Color":{"type":"string","description":"What is the main color?"},"Name":{"type":"string","description":"Suggest a name?"},"product_description":{"type":"string","description":"A detailed description of the product"}},"required":["Name","Color","tagline","product_description"]}
-        else:
-            response_schema={"type":"object","properties":{"product_category":{"type":"string","description":"Suggest the top category and its top 50 to 80 retail selling and supply chain attributes from the image.The category hierarchy must be 4 levels deep, separated by >  character"},"attribute_table":{"type":"array","items":{"type":"object","properties":{"attr_name":{"type":"string","description":"Name of the product attribute which will be analyzed"},"attr_desc":{"type":"string","description":"Describe the attribute"},"value_range":{"type":"string","description":"Is a list of values the attribute can have.Display it as array of string"}},"required":["attr_desc","attr_name","value_range"]},"description":"Table listing product attributes and details."}},"required":["product_category","attribute_table"]}
-
-        tags_json = await llm_service.generate_image_tags(image_url,prompt,response_schema)
-    
-        
-        # Return the tags template
-        if "HX-Request" in request.headers:
-            return templates.TemplateResponse(
-                "partials/image_tags.html",
-                {"request": request, "tags": tags_json}
-            )
-            
-        # If it's not an HTMX request, return JSON
-        return tags_json
-        
-    except Exception as e:
-        logger.error(f"Error generating tags: {str(e)}")
-        if "HX-Request" in request.headers:
-            return templates.TemplateResponse(
-                "partials/image_tags.html",
-                {"request": request, "error": f"Error generating tags: {str(e)}"}
-            )
-        raise HTTPException(status_code=500, detail=f"Error generating tags: {str(e)}")
 
 @router.post("/bulk_upload/")
 async def bulk_upload(request: Request, file: UploadFile = File(...)):
@@ -300,6 +250,7 @@ async def bulk_upload(request: Request, file: UploadFile = File(...)):
     try:
         # Ensure we're using PostgreSQL
         vector_db_service = get_vector_db_service()
+        embedding_service = get_embedding_service()
         if vector_db_service.get_name() != "postgres":
             raise HTTPException(
                 status_code=400,
@@ -343,6 +294,7 @@ async def bulk_upload(request: Request, file: UploadFile = File(...)):
                 image_id = item.get("id", str(uuid.uuid4()))
                 
                 # Create embedding
+                # embedding = embedding_service.create_image_embedding(image_path)
                 embedding = embedding_service.create_image_embedding(image_path)
                 
                 # Prepare metadata
@@ -410,7 +362,7 @@ async def check_status():
     """Check if all services are properly initialized"""
     try:
         # Check embedding service (by accessing the flag directly - not ideal but simple)
-        embedding_initialized = getattr(embedding_service, "_initialized", False)
+        embedding_initialized = getattr(get_embedding_service, "_initialized", False)
         
         # Check storage service
         storage_initialized = hasattr(gcs_storage_service, "bucket") and gcs_storage_service.bucket is not None

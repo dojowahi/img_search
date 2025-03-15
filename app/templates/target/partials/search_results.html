@@ -28,7 +28,7 @@
                 
                 <!-- Generate Tags Button -->
                 <button class="mt-2 px-3 py-1 bg-target-red text-white text-xs font-medium rounded hover:bg-target-dark transition-colors flex items-center"
-                        hx-post="/api/v1/generate_tags/{{ result.id }}?simple=1"
+                        hx-post="/api/v1/generate_tags/{{ result.id }}?simple=2"
                         hx-target="#tags-{{ result.id }}"
                         hx-indicator="#tags-loader-{{ result.id }}">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
