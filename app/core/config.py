@@ -27,14 +27,14 @@ class Settings(BaseSettings):
     # App settings
     APP_NAME: str = "Image Search API"
     API_V1_STR: str = "/api/v1"
-    
+    GEMINI_MODEL:str = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
     # GCP settings
     GCP_PROJECT_ID: str = os.environ.get("GCP_PROJECT_ID", "gen-ai-4all")
     GCP_REGION: str = os.environ.get("GCP_REGION", "us-central1")
     GCS_SIGNED_URL_EXPIRATION_MINUTES: int = int(os.environ.get("GCS_SIGNED_URL_EXPIRATION_MINUTES", "2"))
     GCP_SERVICE_ACCOUNT_FILE: Optional[str] = os.environ.get("GCP_SERVICE_ACCOUNT_FILE")
-    GCS_BUCKET_NAME: str = os.environ.get("GCS_BUCKET_NAME", "search_clip_img")
-    GCS_IMAGES_PREFIX: str = os.environ.get("GCS_IMAGES_PREFIX", "images/")
+    GCS_BUCKET_NAME: str = os.environ.get("GCS_BUCKET_NAME", "img_search_embed")
+    GCS_UPLOADS_PREFIX: str = os.environ.get("GCS_UPLOADS_PREFIX", "uploads/")
     UPLOAD_DIR: str = os.environ.get("UPLOAD_DIR", "/home/ankurwahi/python_dev/img_search/tmp_uploads")  # For temporary storage
     # CLIP model settings
     CLIP_MODEL: str = os.environ.get("CLIP_MODEL", "ViT-B/32")
@@ -66,8 +66,6 @@ class Settings(BaseSettings):
     DB_HOST: str = os.environ.get("DB_HOST", "127.0.0.1")
     DB_PORT: int = int(os.environ.get("DB_PORT", 5432))
     INSTANCE_CONNECTION_NAME: Optional[str] = os.environ.get("INSTANCE_CONNECTION_NAME")
-    
-    
     
     class Config:
         env_file = ".env"

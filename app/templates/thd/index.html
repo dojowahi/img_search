@@ -1,81 +1,65 @@
 {% extends "base/layout.html" %}
 
-{% block title %}Wayfair Image Search{% endblock %}
+{% block title %}THD Image Search{% endblock %}
 
 {% block additional_css %}
 <style>
-    /* Wayfair-specific styles */
+    /* THD-specific styles */
     .image-card:hover {
-        box-shadow: 0 10px 15px -3px rgba(123, 44, 191, 0.1), 0 4px 6px -2px rgba(123, 44, 191, 0.05);
+        box-shadow: 0 10px 15px -3px rgba(255, 102, 0, 0.1), 0 4px 6px -2px rgba(255, 102, 0, 0.05);
     }
-    
-    /* Additional Wayfair styling customizations */
-    .wayfair-header {
-        background-color: #7B2CBF;
+
+    /* Additional THD styling customizations */
+    .thd-header {
+        background-color: #FF6600;
         color: white;
     }
-    
-    /* Wayfair accent styling for highlights and contrasts */
-    .wayfair-accent {
-        color: #29B6A9;
-    }
-    .bg-wayfair-accent {
-        background-color: #29B6A9;
-    }
-    
-    /* Optional custom scrollbar for Wayfair branding */
-    ::-webkit-scrollbar {
-        width: 8px;
-        height: 8px;
-    }
-    ::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb {
-        background: #7B2CBF;
-        border-radius: 10px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-        background: #6021A0;
-    }
+
+    /* Map brand colors to THD-specific naming for backward compatibility */
+    .text-thd-orange { color: #FF6600; }
+    .bg-thd-orange { background-color: #FF6600; }
+    .border-thd-orange { border-color: #FF6600; }
+    .text-thd-white { color: #FFFFFF; }
+    .bg-thd-white { background-color: #FFFFFF; }
+    .ring-thd-orange { --tw-ring-color: #FF6600; }
+    .hover\:bg-thd-dark-orange:hover { background-color: #CC5200; } /* Slightly darker orange */
+    .focus\:ring-thd-orange:focus { --tw-ring-color: #FF6600; }
+    .focus\:border-thd-orange:focus { border-color: #FF6600; }
+    .bg-thd-gray { background-color: #F0F0F0; }
+    .text-thd-text { color: #000000; }
 </style>
 {% endblock %}
 
 {% block header %}
-<!-- Wayfair-themed Header -->
 <header class="mb-8 text-center bg-brand-primary rounded-lg p-6 shadow-md">
-    <h1 class="text-4xl font-bold text-white mb-2">Wayfair Image Search</h1>
-    <p class="text-lg text-white opacity-90">Find home furnishings using text or image similarity</p>
+    <h1 class="text-4xl font-bold text-white mb-2">The Home Depot Image Search</h1>
+    <p class="text-lg text-white opacity-90">Find images and videos using text or file similarity</p>
 </header>
 {% endblock %}
 
 {% block content %}
-<!-- Main tabs -->
 <div class="mb-8 bg-white rounded-lg shadow overflow-hidden border border-gray-200">
     <div class="flex border-b">
-        <!-- Search tabs -->
-        <button 
-            class="px-6 py-3 w-1/2 text-center font-medium text-brand-primary border-b-2 border-brand-primary bg-white"
+        <button
+            class="px-6 py-3 w-1/3 text-center font-medium text-brand-primary border-b-2 border-brand-primary bg-white"
             id="tab-text-search"
             onclick="switchTab('text-search')">
             Text Search
         </button>
-        <button 
-            class="px-6 py-3 w-1/2 text-center font-medium text-gray-500 hover:text-brand-primary bg-gray-50"
+        <button
+            class="px-6 py-3 w-1/3 text-center font-medium text-gray-500 hover:text-brand-primary bg-gray-50"
             id="tab-image-search"
             onclick="switchTab('image-search')">
             Image Search
         </button>
-        <button 
-            class="px-6 py-3 w-1/3 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
-            id="tab-video-search" 
+        <button
+            class="px-6 py-3 w-1/3 text-center font-medium text-gray-500 hover:text-brand-primary bg-gray-50"
+            id="tab-video-search"
             onclick="switchTab('video-search')">
             Video Search
         </button>
     </div>
-    
-    <!-- Text Search Section - Set to visible by default -->
+
     <div id="text-search-section" class="p-6">
         <div class="bg-gray-50 border-l-4 border-brand-primary p-4 mb-4">
             <div class="flex">
@@ -86,40 +70,40 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-gray-800">
-                        Search our furniture catalog using natural language descriptions.
+                        Search our image database using natural language descriptions.
                     </p>
                 </div>
             </div>
         </div>
-        
+
         <form hx-get="/api/v1/search_by_text/"
-              hx-headers='{"X-Brand": "wayfair"}'
+              hx-headers='{"X-Brand": "thd"}'
               hx-target="#results-area"
               hx-indicator="#text-search-indicator"
               class="space-y-4">
             <div>
                 <label for="query" class="block text-sm font-medium text-gray-700 mb-1">
-                    What furniture are you looking for?
+                    What are you looking for?
                 </label>
-                <input type="text" 
-                       name="query" 
+                <input type="text"
+                       name="query"
                        required
-                       placeholder="E.g. modern sofa, wooden dining table..."
+                       placeholder="Enter search terms..."
                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
             </div>
             <div>
                 <label for="limit" class="block text-sm font-medium text-gray-700 mb-1">
                     Maximum results
                 </label>
-                <input type="number" 
-                       name="limit" 
+                <input type="number"
+                       name="limit"
                        value="3"
-                       min="1" 
+                       min="1"
                        max="10"
                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
             </div>
             <div class="flex items-center justify-between pt-2">
-                <button type="submit" 
+                <button type="submit"
                         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
                     Search
                 </button>
@@ -133,42 +117,89 @@
             </div>
         </form>
     </div>
-    
-    <!-- Image Search Section -->
+
     <div id="image-search-section" class="p-6 hidden">
         <form hx-encoding="multipart/form-data"
               hx-post="/api/v1/search_by_image/"
-              hx-headers='{"X-Brand": "wayfair"}'
+              hx-headers='{"X-Brand": "thd"}'
               hx-target="#results-area"
               hx-indicator="#image-search-indicator"
               class="space-y-4">
+                <div>
+                    <label for="file" class="block text-sm font-medium text-gray-700 mb-1">
+                        Select image to search with
+                    </label>
+                    <input type="file"
+                           name="file"
+                           required
+                           accept="image/*"
+                           id="image-upload"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
+                </div>
+                <img id="uploaded-image" class="mt-4 hidden" alt="Uploaded Image" style="max-width: 300px; height: 300px;">
+                <div>
+                    <label for="limit" class="block text-sm font-medium text-gray-700 mb-1">
+                        Maximum results
+                    </label>
+                    <input type="number"
+                           name="limit"
+                           value="3"
+                           min="1"
+                           max="10"
+                           class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
+                </div>
+                <div class="flex items-center justify-between pt-2">
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+                        Find Similar Images
+                    </button>
+                    <div id="image-search-indicator" class="htmx-indicator flex items-center">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-brand-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Searching...</span>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    <div id="video-search-section" class="p-6 hidden">
+        <form hx-encoding="multipart/form-data"
+              hx-post="/api/v1/search_by_video_frame/"
+              hx-headers='{"X-Brand": "thd"}'
+              hx-target="#results-area"
+              hx-indicator="#video-search-indicator"
+              class="space-y-4">
             <div>
                 <label for="file" class="block text-sm font-medium text-gray-700 mb-1">
-                    Upload a furniture image to find similar items
+                    Select video to search with
                 </label>
-                <input type="file" 
-                       name="file" 
+                <input type="file"
+                       name="file"
                        required
-                       accept="image/*"
+                       accept="video/*"
+                       id="video-upload"
                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
             </div>
+            <video id="uploaded-video" class="mt-4 hidden" controls muted style="width: 300px; height: 300px;"></video>
             <div>
                 <label for="limit" class="block text-sm font-medium text-gray-700 mb-1">
                     Maximum results
                 </label>
-                <input type="number" 
-                       name="limit" 
+                <input type="number"
+                       name="limit"
                        value="3"
-                       min="1" 
+                       min="1"
                        max="10"
                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-primary focus:border-brand-primary">
             </div>
             <div class="flex items-center justify-between pt-2">
-                <button type="submit" 
+                <button type="submit"
                         class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
-                    Find Similar Furniture
+                    Find Similar Frame
                 </button>
-                <div id="image-search-indicator" class="htmx-indicator flex items-center">
+                <div id="video-search-indicator" class="htmx-indicator flex items-center">
                     <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-brand-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -178,48 +209,6 @@
             </div>
         </form>
     </div>
-
-    <div id="video-search-section" class="p-6 hidden">
-        <form hx-encoding="multipart/form-data" hx-post="/api/v1/search_by_video_frame/"
-            hx-headers='{"X-Brand": "target"}' hx-target="#results-area" hx-indicator="#video-search-indicator"
-            class="space-y-4">
-            <div>
-                <label for="file" class="block text-sm font-medium text-gray-700 mb-1">
-                    Select video to search with
-                </label>
-                <input type="file" name="file" required accept="video/*" id="video-upload"
-                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-target-red focus:border-target-red">
-            </div>
-            <video id="uploaded-video" class="mt-4 hidden" controls muted
-                style="width: 300px; height: 300px;"></video>
-            <div>
-                <label for="limit" class="block text-sm font-medium text-gray-700 mb-1">
-                    Maximum results
-                </label>
-                <input type="number" name="limit" value="3" min="1" max="10"
-                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-target-red focus:border-target-red">
-            </div>
-            <div class="flex items-center justify-between pt-2">
-                <button type="submit"
-                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
-                    Find Similar Frame
-                </button>
-                <div id="video-search-indicator" class="htmx-indicator flex items-center">
-                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-target-red" xmlns="http://www.w3.org/2000/svg"
-                        fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                            stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                    </svg>
-                    <span>Searching...</span>
-                </div>
-            </div>
-        </form>
-    </div>
-</div>
-</div>
 {% endblock %}
 
 {% block additional_js %}

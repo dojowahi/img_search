@@ -34,6 +34,39 @@ def create_application() -> FastAPI:
         title=settings.APP_NAME,
         docs_url="/docs",
         redoc_url="/redoc",
+        openapi_url="/openapi.json"
+    )
+import os
+from pathlib import Path
+
+from fastapi import FastAPI
+from fastapi.templating import Jinja2Templates
+
+# Get the path to the app directory
+APP_DIR = Path(__file__).resolve().parent
+STATIC_DIR = os.path.join(APP_DIR, "static")
+TEMPLATES_DIR = os.path.join(APP_DIR, "templates")
+
+# Configure logging
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+# Initialize templates
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+def create_application() -> FastAPI:
+    """Create and configure the FastAPI application"""
+    application = FastAPI(
+        title=settings.APP_NAME,
+        docs_url="/docs",
+        redoc_url="/redoc",
+        openapi_url="/openapi.json"
+
     )
     
     # Register startup and shutdown events
@@ -87,6 +120,22 @@ async def wayfair_frontend(request: Request):
     return templates.TemplateResponse(
         "wayfair/index.html", 
         {"request": request, "brand": "wayfair", "brand_config": BRAND_CONFIG["wayfair"]}
+    )
+
+@app.get("/walmart", response_class=HTMLResponse)
+async def walmart(request: Request):
+    """Walmart-branded frontend"""
+    return templates.TemplateResponse(
+        "walmart/index.html", 
+        {"request": request, "brand": "walmart", "brand_config": BRAND_CONFIG["walmart"]}
+    )
+
+@app.get("/thd", response_class=HTMLResponse)
+async def thd(request: Request):
+    """Home Depot-branded frontend"""
+    return templates.TemplateResponse(
+        "thd/index.html", 
+        {"request": request, "brand": "thd", "brand_config": BRAND_CONFIG["thd"]}
     )
 
 @app.get("/upload", response_class=HTMLResponse)

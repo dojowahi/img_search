@@ -35,6 +35,7 @@ tmp_uploads/
 *.log
 logs/
 
+
 # Docker and deployment files
 Dockerfile
 .dockerignore

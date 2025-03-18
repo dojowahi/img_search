@@ -1,5 +1,7 @@
 from typing import List, Optional
-from pydantic import BaseModel, HttpUrl
+
+from pydantic import BaseModel
+
 
 class SearchResult(BaseModel):
     id: str
@@ -9,6 +11,10 @@ class SearchResult(BaseModel):
 
 class SearchResponse(BaseModel):
     results: List[SearchResult]
+
+class VideoSearchResponse(BaseModel):
+    results: List[SearchResult]
+    frame_img_url: str
 
 class UploadResult(BaseModel):
     id: str

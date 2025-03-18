@@ -124,7 +124,7 @@ async def search_by_text(
 async def search_by_image(
     request: Request,
     file: UploadFile = File(...), 
-    limit: int = Query(3, ge=1, le=100)
+    limit: int = Query(3, ge=1, le=5)
 ):
     """
     Search for images similar to an uploaded image

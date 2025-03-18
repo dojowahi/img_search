@@ -20,7 +20,7 @@ class GCSStorageService(StorageService):
     def __init__(self):
         self.upload_dir = settings.UPLOAD_DIR
         self.bucket_name = settings.GCS_BUCKET_NAME
-        self.prefix = settings.GCS_IMAGES_PREFIX
+        self.prefix = settings.GCS_UPLOADS_PREFIX
         self.client = None
         self.bucket = None
         self.signed_url_expiration = timedelta(minutes=settings.GCS_SIGNED_URL_EXPIRATION_MINUTES)
@@ -59,12 +59,14 @@ class GCSStorageService(StorageService):
             logger.error(f"Error connecting to GCS bucket: {e}")
             raise
     
-    async def save_upload(self, file: UploadFile) -> Tuple[str, bool]:
+    async def save_upload(self, file: UploadFile,suffix: Optional[str] = None) -> Tuple[str, bool]:
         """
         Save an uploaded file to temporary local storage for processing
         Returns tuple of (temp_file_path, is_cleanup_needed)
         """
-        temp_file = tempfile.NamedTemporaryFile(delete=False, dir=self.upload_dir)
+        if suffix is None:
+            suffix = os.path.splitext(file.filename)[1]
+        temp_file = tempfile.NamedTemporaryFile(delete=False, dir=self.upload_dir,suffix=suffix)
         temp_file_name = temp_file.name
         temp_file.close()
         

@@ -9,3 +9,6 @@ gcloud iam service-accounts add-iam-policy-binding \
   sa@my-project-id.iam.gserviceaccount.com \
   --member="user:admin@winkwink.altostrat.com" \
   --role="roles/iam.serviceAccountTokenCreator"
+
+# Deployment
+nohup sh /home/ankurwahi/python_dev/img_search/app/scripts/deploy.sh > deployment.log 2>&1 &

@@ -153,7 +153,6 @@ async def proxy_image(image_id: str, request: Request):
     try:
         # Get vector DB service to find metadata
         vector_db_service = get_vector_db_service()
-        
         # Try to get metadata if available
         metadata = None
         try:

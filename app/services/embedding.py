@@ -2,6 +2,7 @@ import logging
 import os
 import tempfile
 import time
+import warnings
 
 import clip
 import numpy as np
@@ -12,6 +13,24 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+def deprecated(func):
+    """This is a decorator which can be used to mark functions
+    as deprecated. It will result in a warning being emitted
+    when the function is used."""
+
+    def new_func(*args, **kwargs):
+        warnings.simplefilter('always', DeprecationWarning)  # turn off filter
+        warnings.warn(f"Call to deprecated function {func.__name__}.",
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        warnings.simplefilter('default', DeprecationWarning)  # reset filter
+        return func(*args, **kwargs)
+
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
+
 class EmbeddingService:
     def __init__(self):
         self.model = None
@@ -19,6 +38,7 @@ class EmbeddingService:
         self.device = None
         self._initialized = False  # Initialization flag
     
+    @deprecated
     async def initialize(self):
         """Initialize the CLIP model with warmup"""
         try:
@@ -67,13 +87,15 @@ class EmbeddingService:
             logger.error(f"Error initializing CLIP model: {e}")
             # Re-raise to ensure the startup fails if model can't be loaded
             raise
-    
+        
+    @deprecated
     def _check_initialized(self):
         """Check if the service is initialized"""
         if not self._initialized:
             logger.error("EmbeddingService used before initialization")
             raise RuntimeError("EmbeddingService must be initialized before use")
     
+    @deprecated    
     def create_image_embedding(self, image_path):
         """Create an embedding from an image"""
         self._check_initialized()
@@ -101,6 +123,7 @@ class EmbeddingService:
             logger.error(f"Error creating image embedding for {image_path}: {e}")
             raise
     
+    @deprecated   
     def create_text_embedding(self, text, max_retries=3):
         """Create an embedding from text with retry logic"""
         self._check_initialized()
@@ -151,6 +174,7 @@ class EmbeddingService:
         logger.error(f"Failed to create text embedding after {max_retries} attempts")
         raise RuntimeError(f"Failed to create text embedding for: {text[:30]}...")
     
+    @deprecated
     def validate_embeddings(self):
         """Test if text and image embeddings are in the same space"""
         try:
@@ -184,4 +208,4 @@ class EmbeddingService:
             return None
 
 # Create a global instance
-embedding_service = EmbeddingService()
+# embedding_service = EmbeddingService()
