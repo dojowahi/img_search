@@ -1,0 +1,72 @@
+<div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+    <h2 class="text-xl font-semibold text-brand-primary mb-4">Search Results</h2>
+    
+    {% if results|length > 0 %}
+    <div class="mb-4">
+        <p class="text-gray-700">Found {{ results|length }} matching furniture item(s)</p>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for result in results %}
+        <div class="border rounded-lg overflow-hidden bg-gray-50 image-card">
+            <div class="h-48 overflow-hidden relative">
+                <img src="/api/v1/proxy_image/{{ result.id }}" alt="{{ result.filename }}" class="w-full h-full object-cover">
+                <div class="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold {{ 'bg-green-100 text-green-800' if result.similarity_score > 0.8 else 'bg-yellow-100 text-yellow-800' if result.similarity_score > 0.5 else 'bg-red-100 text-red-800' }}">
+                    {{ "%.2f"|format(result.similarity_score) }}
+                </div>
+            </div>
+            <div class="p-3">
+                <div class="flex justify-between items-center">
+                    <p class="font-medium text-gray-800 truncate">{{ result.filename }}</p>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">ID: {{ result.id }}</p>
+                
+                <div id="tags-{{ result.id }}" class="mt-2 text-sm">
+                    </div>
+                
+                <button class="mt-2 px-3 py-1 bg-brand-primary text-white text-xs font-medium rounded hover:bg-brand-accent transition-colors flex items-center"
+                        hx-get="/api/v1/change_bkgnd/{{ result.id }}"
+                        hx-target="#tags-{{ result.id }}"
+                        hx-indicator="#tags-loader-{{ result.id }}">
+                    
+                    Change Background
+                </button>
+                
+                <div id="tags-loader-{{ result.id }}" class="htmx-indicator flex items-center mt-2">
+                    <svg class="animate-spin h-3 w-3 mr-1 text-brand-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="text-xs">Analyzing...</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="mt-6 flex justify-between">
+        <a href="/api/v1/proxy_image/{{ results[0].id }}" target="_blank" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-brand-primary hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+            View Best Match
+        </a>
+        
+        <button onclick="document.getElementById('results-area').innerHTML = ''" class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+            Clear Results
+        </button>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 border-l-4 border-brand-primary p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-brand-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-gray-700">
+                    No matching furniture found. Try adjusting your search query.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>

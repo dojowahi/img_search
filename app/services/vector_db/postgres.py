@@ -43,6 +43,7 @@ class PostgresVectorDBService(VectorDBService):
         try:
             if self.instance_connection_name and os.path.exists('/tmp/cloudsql'):
                 # Using Cloud SQL Proxy with unix socket
+                logger.info("Using Cloud SQL Proxy to connect to Postgres DB")
                 unix_socket = f'/tmp/cloudsql/{self.instance_connection_name}'
                 logger.info(f"Connecting to PostgreSQL via Cloud SQL Proxy at {unix_socket}")
                 
@@ -55,7 +56,7 @@ class PostgresVectorDBService(VectorDBService):
                 logger.info("Successfully connected to PostgreSQL via Cloud SQL Proxy")
             else:
                 # Regular connection for local development
-                logger.info(f"Connecting to PostgreSQL at {self.conn_params.get('host')}:{self.conn_params.get('port')}")
+                logger.info(f"Connecting directly to PostgreSQL at {self.conn_params.get('host')}:{self.conn_params.get('port')}")
                 conn = psycopg2.connect(**self.conn_params)
                 logger.info("Successfully connected to PostgreSQL via direct connection")
         except Exception as e:
@@ -93,7 +94,9 @@ class PostgresVectorDBService(VectorDBService):
                         filename TEXT,
                         upload_time TIMESTAMP,
                         embedding vector({self.vector_size}),
-                        metadata JSONB
+                        product_description TEXT,
+                        product_reviews TEXT,
+                        metadata JSONB     
                     );
                     """)
                     
@@ -122,6 +125,8 @@ class PostgresVectorDBService(VectorDBService):
         
         # Extract common metadata fields
         filename = metadata.pop("filename", "") if metadata else ""
+        product_description = metadata.pop("product_description", "") if metadata else ""
+        product_reviews = metadata.pop("product_reviews", "") if metadata else ""
         upload_time = metadata.pop("upload_time", time.time()) if metadata else time.time()
         
         # Convert timestamp to datetime
@@ -142,19 +147,24 @@ class PostgresVectorDBService(VectorDBService):
                     # Use pgvector's vector casting
                     cur.execute(
                         f"""
-                        INSERT INTO {self.table_name} (id, filename, upload_time, embedding, metadata)
-                        VALUES (%s, %s, %s, %s::vector, %s)
+                        INSERT INTO {self.table_name} (id, filename, upload_time, embedding,product_description, product_reviews, metadata)
+                        VALUES (%s, %s, %s, %s::vector, %s,%s,%s)
                         ON CONFLICT (id) DO UPDATE
                         SET filename = EXCLUDED.filename,
                             upload_time = EXCLUDED.upload_time,
                             embedding = EXCLUDED.embedding,
+                            product_description = EXCLUDED.product_description,
+                            product_reviews = EXCLUDED.product_reviews,
                             metadata = EXCLUDED.metadata;
+                           
                         """,
                         (
                             id,
                             filename,
                             upload_time,
                             vector.tolist(),
+                            product_description,
+                            product_reviews,
                             psycopg2.extras.Json(metadata)
                         )
                     )

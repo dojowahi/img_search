@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -24,6 +24,11 @@ class UploadResult(BaseModel):
 class UploadResponse(BaseModel):
     uploaded_images: List[UploadResult]
 
+class ChatMessageRequest(BaseModel):
+    question: str
+    prod_specific_info: str
+    tcin:str
+    
 class HealthResponse(BaseModel):
     status: str
     timestamp: float

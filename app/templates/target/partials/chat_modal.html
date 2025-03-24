@@ -1,0 +1,137 @@
+<div class="modal-backdrop">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 class="modal-title">Chat with Target</h2>
+            <button class="modal-close-button"
+                onclick="document.getElementById('chat-modal-container').innerHTML = ''">
+                ×
+            </button>
+        </div>
+        <div class="modal-body">
+            <p> Product: {{ tcin }} at store {{ storeId }}</p>
+            <div class="faq-section">
+                <p class="faq-title">Frequently Asked Questions:</p>
+                {% for faq in faqs %}
+                <div class="faq-item">
+                    <button class="faq-button"
+                            data-answer="{{ faq.Answer|e }}"
+                            onclick="showAnswer('answer-{{ loop.index }}', this)">
+                        {{ faq.Question }}
+                    </button>
+                    <div class="faq-response" id="answer-{{ loop.index }}"></div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="mt-4">
+                <p class="font-bold mb-2">Ask your own question:</p>
+                <input type="text" id="user-question" name="question" class="w-full border rounded-md p-2 mb-2" placeholder="Type your question here...">
+                <input type="hidden" name="tcin" value="{{ tcin }}">
+                <input type="hidden" name="storeId" value="{{ storeId }}">
+                <div id="user-chat-response" class="mt-2 mb-2"></div>
+                <button
+                    class="bg-target-red hover:bg-red-700 text-white font-medium py-2 px-4 rounded-md flex items-center justify-center"
+                    hx-get="/api/v1/chat-message"
+                    hx-include="#user-question, input[name='tcin'], input[name='storeId']"
+                    hx-target="#user-chat-response"
+                    hx-swap="outerHTML"
+                    hx-indicator="#question-spinner">
+                    <span>Submit Question</span>
+                    <div id="question-spinner" class="htmx-indicator ml-2">
+                        <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Styles for the modal */
+    .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 0.5rem;
+        max-width: 80%;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .modal-title {
+        color: #cc0000;
+        font-size: 1.5rem;
+        margin: 0;
+    }
+
+    .modal-close-button {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
+
+    .faq-section {
+        margin-top: 1rem;
+    }
+
+    .faq-title {
+        font-weight: bold;
+    }
+
+    .faq-item {
+        margin-bottom: 0.5rem;
+    }
+
+    .faq-button {
+        background: #f3f4f6;
+        border: none;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        display: block; /* Make button take full width */
+    }
+
+    .faq-response {
+        margin-top: 0.5rem;
+        padding-left: 0.5rem;
+    }
+    
+    /* Loading spinner styles */
+    .htmx-indicator {
+        display: none;
+    }
+    .htmx-request .htmx-indicator {
+        display: inline-block;
+    }
+    .htmx-request.htmx-indicator {
+        display: inline-block;
+    }
+</style>
+
+<script>
+    function showAnswer(answerId, button) {
+        const answerDiv = document.getElementById(answerId);
+        const answerText = button.dataset.answer;
+        answerDiv.innerHTML = `<p class="font-bold">A:</p><p>${answerText}</p>`;
+    }
+</script>

@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.templating import Jinja2Templates
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from PIL import Image
@@ -48,7 +48,7 @@ async def generate_tags(request: Request, image_id: str, simple: int =1):
         if not image_url:
             if "HX-Request" in request.headers:
                 return templates.TemplateResponse(
-                    "partials/image_tags.html",
+                    "base/image_tags.html",
                     {"request": request, "error": "Image not found"}
                 )
             raise HTTPException(status_code=404, detail="Image not found")
@@ -68,35 +68,70 @@ async def generate_tags(request: Request, image_id: str, simple: int =1):
         # Return the tags template
         if "HX-Request" in request.headers:
             return templates.TemplateResponse(
-                f"{brand}/partials/image_tags.html",
+                "base/image_tags.html",
                 {"request": request, "tags": tags_json,"brand_config": BRAND_CONFIG[brand]}
             )
             
         # If it's not an HTMX request, return JSON
-        return tags_json
+        return JSONResponse(tags_json)
         
     except Exception as e:
         logger.error(f"Error generating tags: {str(e)}")
         if "HX-Request" in request.headers:
             return templates.TemplateResponse(
-                f"{brand}/partials/image_tags.html",
+                "base/image_tags.html",
                 {"request": request, "error": f"Error generating tags: {str(e)}"}
             )
         raise HTTPException(status_code=500, detail=f"Error generating tags: {str(e)}")
 
-
+@router.get("/change_bkgnd/{image_id}")
+async def bkgnd_changer(request: Request,image_id:str):
+    """Takes an image as an input and return the same image 
+       but with a different background"""
+    
+    brand = request.headers.get("X-Brand", "target")
+    try:
+        image_url = gcs_storage_service.get_file_path(image_id)
+        logger.info(f"Image URL for tag generation:{image_url}")
+        if not image_url:
+            if "HX-Request" in request.headers:
+                return templates.TemplateResponse(
+                    "base/image_tags.html",
+                    {"request": request, "error": "Image not found"}
+                )
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        bkgnd_img_path = await llm_service.change_img_bkgnd(image_url)
+        logger.info(f"Bkgnd path:{bkgnd_img_path}")
+        # Return the tags template
+        if "HX-Request" in request.headers:
+            return templates.TemplateResponse(
+                "base/bkgnd_img.html",
+                {"request": request, "img_path": bkgnd_img_path,"brand_config": BRAND_CONFIG[brand]}
+            )
+            
+        return PlainTextResponse(bkgnd_img_path)
+    except Exception as e:
+        logger.error(f"Error generating image: {str(e)}")
+        if "HX-Request" in request.headers:
+            return templates.TemplateResponse(
+                "base/bkgnd_img.html",
+                {"request": request, "error": f"Error generating image: {str(e)}"}
+            )
+        raise HTTPException(status_code=500, detail=f"Error generating image: {str(e)}")
+    
 @router.post("/search_by_video_frame/")
 async def video_analysis(request: Request,
     file: UploadFile = File(...), 
     limit: int = Query(3, ge=1, le=5)
 ):
-   """ Generate tags for a video using an LLM
+   """ Video analysis to search for products in VectorDB
     
     - Takes a video
     - Calls an LLM to analyze video
-    
-    Returns HTML with the generated tags JSON
-    
+    - Captures frames where the product is mentioned in the video
+    - Finds similar products in the Vector DB
+        
     """
    try:
         brand = request.headers.get("X-Brand", "target")
@@ -207,21 +242,14 @@ async def video_analysis(request: Request,
         
         # If it's an HTMX request, return an HTML error message
         if "HX-Request" in request.headers:
-            error_html = f"""
-            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-                <div class="flex">
-                    <div class="ml-3">
-                        <p class="text-sm text-red-700">
-                            Error searching: {str(e)}
-                        </p>
-                    </div>
-                </div>
-            </div>
-            """
-            return Response(content=error_html, media_type="text/html")
-        
-        # Otherwise, raise a standard FastAPI exception
+            return templates.TemplateResponse(
+                "base/video_search_results.html",
+                {"request": request, "error": f"Error searching by video frame: {str(e)}", "brand_config": BRAND_CONFIG[brand]}
+            )
+                # Otherwise, raise a standard FastAPI exception
+
         raise HTTPException(status_code=500, detail=f"Error searching: {str(e)}")
+
     
    finally:
         # Cleanup temporary file if needed
@@ -229,9 +257,8 @@ async def video_analysis(request: Request,
             gcs_storage_service.cleanup_temp_file(temp_file_path)
 
 
-
-@router.post("/room_builder/")
-async def room_builder(request: Request,
+@router.post("/virtual_builder/")
+async def virtual_builder(request: Request,
     subj_img_file: UploadFile = File(...), 
     pdct_img_file: UploadFile = File(...)
 ):
@@ -261,27 +288,18 @@ async def room_builder(request: Request,
         # )
         
         # # Normal API response
-        return desc
+        return PlainTextResponse(desc)
    except Exception as e:
         logger.error(f"Error searching by video frame: {str(e)}")
         
-        # If it's an HTMX request, return an HTML error message
+        logger.error(f"Error searching by video frame: {str(e)}")
         if "HX-Request" in request.headers:
-            error_html = f"""
-            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-                <div class="flex">
-                    <div class="ml-3">
-                        <p class="text-sm text-red-700">
-                            Error searching: {str(e)}
-                        </p>
-                    </div>
-                </div>
-            </div>
-            """
-            return Response(content=error_html, media_type="text/html")
-        
-        # Otherwise, raise a standard FastAPI exception
+            return templates.TemplateResponse(
+                "base/virtual_builder_results.html",
+                {"request": request, "error": f"Error Virtual builder: {str(e)}", "brand_config": BRAND_CONFIG[brand]}
+            )
         raise HTTPException(status_code=500, detail=f"Error searching: {str(e)}")
+            
     
    finally:
         # Cleanup temporary file if needed

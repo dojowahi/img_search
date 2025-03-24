@@ -29,7 +29,8 @@ templates = Jinja2Templates(directory=TEMPLATES_DIR)
 async def search_by_text(
     request: Request,
     query: str, 
-    limit: int = Query(3, ge=1, le=100)
+    limit: int = Query(3, ge=1, le=100),
+    source: str = Query(None) 
 ):
     """
     Search for images similar to a text query
@@ -89,11 +90,27 @@ async def search_by_text(
                 ))
         
         # Handle HTMX request
+        # if "HX-Request" in request.headers:
+        #     return templates.TemplateResponse(
+        #     f"{brand}/partials/text_search_results.html",
+        #     {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
+        # )
         if "HX-Request" in request.headers:
-            return templates.TemplateResponse(
-            f"{brand}/partials/search_results.html",
-            {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
-        )
+            if source == "virtual-builder":
+                return templates.TemplateResponse(
+                    f"{brand}/partials/virtual_builder_results.html",  # Custom template for virtual-builder
+                    {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
+                )
+            # elif source == "image-search":
+            #     return templates.TemplateResponse(
+            #         f"{brand}/partials/text_search_results.html",  # Custom template for image-search
+            #         {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
+            #     )
+            else: # text-search or no source
+                return templates.TemplateResponse(
+                    f"{brand}/partials/text_search_results.html",  # Default template
+                    {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
+                )
         
         # Normal API response
         return SearchResponse(results=results)
@@ -191,7 +208,7 @@ async def search_by_image(
         # Handle HTMX request
         if "HX-Request" in request.headers:
             return templates.TemplateResponse(
-            f"{brand}/partials/search_results.html",
+            f"{brand}/partials/img_search_results.html",
             {"request": request, "results": results, "brand_config": BRAND_CONFIG[brand]}
         )
         

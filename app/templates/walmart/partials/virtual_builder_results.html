@@ -1,0 +1,62 @@
+<div class="bg-white rounded-lg shadow-md p-6 border border-gray-200">
+    <h2 class="text-xl font-semibold text-brand-primary mb-4">Search Results</h2>
+    
+    {% if results|length > 0 %}
+    <div class="mb-4">
+        <p class="text-gray-700">Found {{ results|length }} matching furniture item(s)</p>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {% for result in results %}
+        <div class="border rounded-lg overflow-hidden bg-gray-50 image-card">
+            <div class="h-48 overflow-hidden relative">
+                <img src="/api/v1/proxy_image/{{ result.id }}" alt="{{ result.filename }}" class="w-full h-full object-cover">
+                <div class="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-semibold {{ 'bg-green-100 text-green-800' if result.similarity_score > 0.8 else 'bg-yellow-100 text-yellow-800' if result.similarity_score > 0.5 else 'bg-red-100 text-red-800' }}">
+                    {{ "%.2f"|format(result.similarity_score) }}
+                </div>
+            </div>
+            <div class="p-3">
+                <div class="flex justify-between items-center">
+                    <p class="font-medium text-gray-800 truncate">{{ result.filename }}</p>
+                    <input type="radio" name="selected_image" value="{{ result.id }}" class="form-radio h-4 w-4 text-brand-primary focus:ring-brand-primary border-gray-300">
+                </div>
+                <p class="text-xs text-gray-500 mt-1">ID: {{ result.id }}</p>
+                
+                <div id="tags-{{ result.id }}" class="mt-2 text-sm">
+                    </div>
+                
+                <div id="tags-loader-{{ result.id }}" class="htmx-indicator flex items-center mt-2">
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="mt-6 flex justify-end">
+        
+        <button onclick="document.getElementById('results-area').innerHTML = ''" class="ml-3 inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+            Clear Results
+        </button>
+    </div>
+    <div class="mt-4 flex justify-center">
+        <button class="px-6 py-3 bg-brand-primary text-white font-semibold rounded-md hover:bg-brand-accent focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary">
+            Build my room
+        </button>
+    </div>
+    {% else %}
+    <div class="bg-gray-50 border-l-4 border-brand-primary p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-brand-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <p class="text-sm text-gray-700">
+                    No matching items found. Try adjusting your search query.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>

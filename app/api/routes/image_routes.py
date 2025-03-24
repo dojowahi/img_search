@@ -68,7 +68,34 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)):
             # Store the image in GCS
             image_id, gcs_path = gcs_storage_service.store_file(temp_file_path, file.filename, image_id)
             need_cleanup = False  # File has been moved, no need to clean up
+            img_path=f"gs://{settings.GCS_BUCKET_NAME}/{gcs_path}"
+            # prod_prompt="""You are a marketing copywriter. Your task is to write compelling and informative product descriptions.
+            # Instructions:
+
+            #     1. Write a product description for based pn the image.
+            #     2. Highlight the key features.
+            #     3. The description should be concise, informative, and persuasive.  Aim for a length between 50 and 100 words.
+            #     4. Just start with the description
+            #     Description:"""
             
+            # product_description = await llm_service.grounded_gemini(img_path,prompt=prod_prompt)
+            # review_prompt ="""You are a review generation assistant. Your task is to create reviews with different sentiments.
+            # Instructions:
+            # 1. Write two positive reviews. These reviews should express a favorable opinion or experience.
+            # 2. Write three neutral reviews. These reviews should provide objective feedback without expressing a strong positive or negative sentiment.
+            # 3. Present all reviews in a numbered list format.
+            # 4. Just start the output with the reviews
+
+            # Example Output:
+
+            # 1. Positive Review: "I had an amazing experience! The service was impeccable, and the atmosphere was delightful. I highly recommend it."
+            # 2. Positive Review: "This is a fantastic product. It exceeded my expectations in every way. I'm so glad I purchased it."
+            # 3. Neutral Review: "The service was adequate, and the product functioned as expected. It met my basic needs."
+            # 4. Neutral Review: "The experience was neither particularly good nor bad. It was an average experience overall."
+            # 5. Neutral Review: "The product is functional and serves its purpose. It's a decent option, but nothing extraordinary."""
+            
+            # product_reviews = await llm_service.grounded_gemini(img_path,prompt=review_prompt)
+
             # Store the embedding and metadata in vector DB
             vector_db_service.store_embedding(
                 id=image_id,
@@ -76,8 +103,11 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)):
                 metadata={
                     "filename": file.filename,
                     "upload_time": time.time(),
+                    # "product_description":product_description,
+                    # "product_reviews":product_reviews,
                     "gcs_path": gcs_path
-                }
+                },
+                
             )
             
             uploaded_ids.append(UploadResult(id=image_id, filename=file.filename, url=gcs_path))
@@ -88,6 +118,7 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)):
             
             # If it's an HTMX request, add this error to the results
             if "HX-Request" in request.headers:
+                uploaded_ids.append(UploadResult(id="error", filename=file.filename, url=str(e)))
                 continue  # Skip the file but continue processing others
             
             raise HTTPException(status_code=500, detail=f"Error processing {file.filename}: {str(e)}")
@@ -99,23 +130,8 @@ async def upload_images(request: Request, files: List[UploadFile] = File(...)):
     
     # Handle HTMX request
     if "HX-Request" in request.headers:
-        # If no files were processed successfully
-        if len(uploaded_ids) == 0:
-            error_html = """
-            <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
-                <div class="flex">
-                    <div class="ml-3">
-                        <p class="text-sm text-red-700">
-                            No images were uploaded successfully. Please check that you selected valid image files.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            """
-            return Response(content=error_html, media_type="text/html")
-        
         return templates.TemplateResponse(
-            "upload_results.html",
+            "base/upload_results.html",
             {"request": request, "uploaded_images": uploaded_ids}
         )
     
@@ -396,107 +412,6 @@ async def check_status():
             "error": str(e)
         }
     
-@router.post("/clear_database")
-async def clear_database(request: Request):
-    """
-    Clear all data from the ChromaDB database
-    
-    - Removes all embeddings and metadata
-    - Provides a clean slate for new uploads
-    
-    Returns success or error message
-    """
-    try:
-        # Get vector database service
-        vector_db_service = get_vector_db_service()
-        
-        # Check if it's ChromaDB
-        if vector_db_service.get_name() != "chroma":
-            return templates.TemplateResponse(
-                "partials/action_result.html",
-                {
-                    "request": request, 
-                    "success": False,
-                    "message": "This operation is only supported for ChromaDB"
-                }
-            )
-        
-        # Clear the database
-        # Access the collection directly for ChromaDB
-        if hasattr(vector_db_service, 'collection') and vector_db_service.collection:
-            # Get all IDs to delete
-            try:
-                # Try to get all IDs
-                query_result = vector_db_service.collection.query(
-                    query_embeddings=[[0] * vector_db_service.vector_size],  # Dummy query
-                    n_results=10000  # Get as many as possible
-                )
-                
-                if query_result and 'ids' in query_result and len(query_result['ids']) > 0:
-                    all_ids = query_result['ids'][0]
-                    
-                    # Delete all documents if IDs found
-                    if all_ids:
-                        vector_db_service.collection.delete(ids=all_ids)
-                        logger.info(f"Cleared {len(all_ids)} documents from ChromaDB")
-                    else:
-                        logger.info("No documents found to delete")
-                else:
-                    # Alternative: reset the collection
-                    vector_db_service.collection.delete(where={})
-                    logger.info("Cleared ChromaDB using delete where")
-            except Exception as inner_e:
-                logger.error(f"Error during collection query: {str(inner_e)}")
-                # Last resort: delete and recreate collection
-                try:
-                    # Get collection name
-                    collection_name = vector_db_service.collection_name
-                    # Delete collection
-                    vector_db_service.client.delete_collection(collection_name)
-                    # Recreate empty collection
-                    vector_db_service.collection = vector_db_service.client.create_collection(
-                        name=collection_name,
-                        metadata={"description": "Image embeddings from CLIP model"}
-                    )
-                    logger.info(f"Recreated ChromaDB collection: {collection_name}")
-                except Exception as recreation_e:
-                    logger.error(f"Error recreating collection: {str(recreation_e)}")
-                    raise
-        else:
-            logger.warning("Could not access ChromaDB collection directly")
-            raise ValueError("ChromaDB collection not accessible")
-        
-        # Return success response
-        if "HX-Request" in request.headers:
-            return templates.TemplateResponse(
-                "partials/action_result.html",
-                {
-                    "request": request, 
-                    "success": True,
-                    "message": "Database cleared successfully!"
-                }
-            )
-        
-        # Regular API response
-        return {"status": "success", "message": "Database cleared successfully"}
-        
-    except Exception as e:
-        logger.error(f"Error clearing database: {str(e)}")
-        
-        # HTMX response
-        if "HX-Request" in request.headers:
-            return templates.TemplateResponse(
-                "partials/action_result.html",
-                {
-                    "request": request, 
-                    "success": False,
-                    "message": f"Error clearing database: {str(e)}"
-                }
-            )
-        
-        # API response
-        raise HTTPException(status_code=500, detail=f"Error clearing database: {str(e)}")
-
 @router.get("/health", response_model=HealthResponse)
 async def health_check(request: Request):
     """

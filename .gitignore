@@ -21,3 +21,4 @@ pyproject*
 uv.lock
 *.json
 deploy.sh
+bulk_load.sh
