@@ -6,7 +6,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
-from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.templating import Jinja2Templates
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from PIL import Image
@@ -275,7 +275,7 @@ async def virtual_builder(request: Request,
         # Save the uploaded file temporarily
         subj_temp_file_path, need_cleanup = await gcs_storage_service.save_upload(subj_img_file)
         pdct_temp_file_path, need_cleanup = await gcs_storage_service.save_upload(pdct_img_file)
-        desc = await llm_service.image_merge(subj_temp_file_path,pdct_temp_file_path)
+        desc = await llm_service.imagen_image_merge(subj_temp_file_path,pdct_temp_file_path)
         # Call the LLM to generate tags
         logger.info(f"Generating description: {desc}")
 
@@ -290,12 +290,12 @@ async def virtual_builder(request: Request,
         # # Normal API response
         return PlainTextResponse(desc)
    except Exception as e:
-        logger.error(f"Error searching by video frame: {str(e)}")
+        logger.error(f"Error building virtual image: {str(e)}")
         
-        logger.error(f"Error searching by video frame: {str(e)}")
+        logger.error(f"Error searching by virtual image: {str(e)}")
         if "HX-Request" in request.headers:
             return templates.TemplateResponse(
-                "base/virtual_builder_results.html",
+                "walmart/virtual_builder_results.html",
                 {"request": request, "error": f"Error Virtual builder: {str(e)}", "brand_config": BRAND_CONFIG[brand]}
             )
         raise HTTPException(status_code=500, detail=f"Error searching: {str(e)}")

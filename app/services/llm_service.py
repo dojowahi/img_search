@@ -171,7 +171,7 @@ class LLMService:
             }
     
 
-    async def image_merge(self,subject_img:str,product_img:str):
+    async def gemini_image_merge(self,subject_img:str,product_img:str):
         try:
             # subject_img_bytes = Image.open(BytesIO(open(subject_img, "rb").read()))
             subject_img_pil = Image.open(subject_img)
@@ -219,6 +219,56 @@ class LLMService:
                 "description": f"There was an error generating image for {product_img}."
             }
 
+    async def imagen_image_merge(self,subject_img:str,product_img:str):
+        
+        try:
+            from PIL import Image
+            # subject_img_bytes = Image.open(BytesIO(open(subject_img, "rb").read()))
+            subject_img_pil = Image.open(subject_img)
+            product_img_pil = Image.open(product_img)
+            subject_desc = await self.image_qna(subject_img_pil, prompt="Describe the room in a few lines")
+            # product_img_bytes = Image.open(BytesIO(open(product_img, "rb").read()))
+            product_desc = await self.image_qna(product_img_pil, prompt="Describe product in few lines")
+
+            
+            logger.info(f"Subject:{subject_desc} and Product:{product_desc}")
+          
+            # logger.info(f"Room prompt:{subject_desc}")
+            bkg_img_id = str(uuid.uuid4())
+            # img = os.path.basename(img_path)
+            output_file = f"gs://{settings.GCS_BUCKET_NAME}/{settings.GCS_BKG_IMG_PREFIX}{bkg_img_id}"
+            
+            from vertexai.preview.vision_models import Image, ImageGenerationModel
+            model = ImageGenerationModel.from_pretrained(settings.IMAGEN_MODEL)
+            base_img = Image.load_from_file(location=product_img)
+            instruction_set = f"""Instructions:
+                                Carefully consider the style and layout of {subject_desc}
+                                Place the product in the room in a way that enhances the overall aesthetic.
+                                The placement should look natural, as if the product belongs in the room.
+                                Consider factors such as lighting, color scheme, when placing the product.
+                                Ensure the exact product is used without any modifications."""
+            images =  model.edit_image(
+                base_image=base_img,
+                prompt=instruction_set,
+                edit_mode="product-image",
+                output_gcs_uri=output_file
+            )
+
+            logger.info(f"Created output image using {len(images[0]._image_bytes)} bytes")
+
+            virtual_img_signed_url = gcs_storage_service.find_full_bkg_img_gcs_path(output_file)
+            # images[0].save(location=output_file, include_generation_parameters=False)
+            # logger.info(f"Output file:{bkg_img_path}")
+            return virtual_img_signed_url
+        except Exception as e:
+            logger.error(f"Error unable to create new image : {str(e)}")
+            return {
+                "error": f"Failed to do merge the images: {str(e)}",
+                "title": "Error creating new image",
+                "description": "There was an error in creating image."
+            }
+
+            
     async def image_qna(self,img:Image,prompt:str):
         try:
             response = self.client.models.generate_content(

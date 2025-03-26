@@ -59,6 +59,36 @@
     .text-target-text {
         color: #333333;
     }
+    
+    /* Room Designer specific styles */
+    .room-item {
+        transition: transform 0.3s ease;
+    }
+    
+    .room-item:hover {
+        transform: translateY(-5px);
+    }
+    
+    .room-btn {
+        background-color: #CC0000;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.375rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-align: center;
+    }
+    
+    .room-btn:hover {
+        background-color: #990000;
+    }
+    
+    .room-btn:disabled {
+        background-color: #e5e7eb;
+        color: #9ca3af;
+        cursor: not-allowed;
+    }
 </style>
 {% endblock %}
 
@@ -72,21 +102,25 @@
 {% block content %}
 <div class="mb-8 bg-white rounded-lg shadow overflow-hidden border border-gray-200">
     <div class="flex border-b">
-        <button class="px-6 py-3 w-1/4 text-center font-medium text-target-red border-b-2 border-target-red bg-white"
+        <button class="px-6 py-3 w-1/5 text-center font-medium text-target-red border-b-2 border-target-red bg-white"
             id="tab-text-search" onclick="switchTab('text-search')">
             Text Search
         </button>
-        <button class="px-6 py-3 w-1/4 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
+        <button class="px-6 py-3 w-1/5 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
             id="tab-image-search" onclick="switchTab('image-search')">
             Image Search
         </button>
-        <button class="px-6 py-3 w-1/4 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
+        <button class="px-6 py-3 w-1/5 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
             id="tab-video-search" onclick="switchTab('video-search')">
             Video Search
         </button>
-        <button class="px-6 py-3 w-1/4 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
+        <button class="px-6 py-3 w-1/5 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
             id="product-chat-search" onclick="switchTab('product-search')">
             Product Decision Support
+        </button>
+        <button class="px-6 py-3 w-1/5 text-center font-medium text-gray-500 hover:text-target-red bg-gray-50"
+            id="tab-room-designer" onclick="switchTab('room-designer')">
+            Room Designer
         </button>
     </div>
 
@@ -103,26 +137,38 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-gray-800">
-                        Search our image database using natural language descriptions.
+                        Search our image database using natural language descriptions. You can type or use voice search.
                     </p>
                 </div>
             </div>
         </div>
-
+    
         <form hx-get="/api/v1/search_by_text/" hx-headers='{"X-Brand": "target"}' hx-target="#results-area"
             hx-indicator="#text-search-indicator" class="space-y-4">
-            <div>
+            <div class="relative">
                 <label for="query" class="block text-sm font-medium text-gray-700 mb-1">
                     What are you looking for?
                 </label>
-                <input type="text" name="query" required placeholder="Enter search terms..."
-                    class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-target-red focus:border-target-red">
+                <div class="flex items-center">
+                    <input type="text" id="query" name="query" required placeholder="Enter search terms..."
+                        class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-target-red focus:border-target-red">
+                    <button type="button" id="voice-search-btn" 
+                        class="absolute right-2 p-1 rounded-full text-gray-400 hover:text-target-red focus:outline-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                    </button>
+                </div>
+                <div id="voice-recording-status" class="mt-1 text-sm text-gray-500 hidden">
+                    Recording... Click the microphone to stop
+                </div>
             </div>
             <div>
                 <label for="limit" class="block text-sm font-medium text-gray-700 mb-1">
                     Maximum results
                 </label>
-                <input type="number" name="limit" value="3" min="1" max="10"
+                <input type="number" id="result-limit" name="limit" value="3" min="1" max="10"
                     class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-target-red focus:border-target-red">
             </div>
             <div class="flex items-center justify-between pt-2">
@@ -225,7 +271,7 @@
         </form>  
     </div>
     
-    <div id="product-chat-section" class="p-6">
+    <div id="product-chat-section" class="p-6 hidden">
         <div class="bg-target-gray border-l-4 border-target-red p-4 mb-4">
             <div class="flex">
                 <div class="flex-shrink-0">
@@ -238,7 +284,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-gray-800">
-                        Search and chat with products from Chanhassen Target.
+                        Search and chat with products from your favorite Target.
                     </p>
                 </div>
             </div>
@@ -285,10 +331,169 @@
             </div>
         </form>
     </div>
-</div>
-<!-- <div id="results-area" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-    {# Results from other searches will be displayed here #}
-</div> -->
+    
+    <!-- Room Designer Section -->
+    <div id="room-designer-section" class="p-6 hidden">
+        <div class="bg-target-gray border-l-4 border-target-red p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-target-red" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                            clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-gray-800">
+                        Design your perfect room with Target products. Add items one by one or all at once.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Room Designer Tabs -->
+        <div class="mb-6">
+            <div class="flex space-x-4 mb-4">
+                <button class="px-4 py-2 bg-target-red text-white rounded-md shadow-sm" id="one-by-one-btn" onclick="switchRoomTab('one-by-one')">
+                    Add items One by One
+                </button>
+                <button class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md shadow-sm" id="all-at-once-btn" onclick="switchRoomTab('all-at-once')">
+                    Add All at Once
+                </button>
+            </div>
+        </div>
+        
+        <!-- Prompt Section -->
+        <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Prompt</h3>
+            <p class="text-gray-700">Create an empty party room.</p>
+        </div>
+        
+        <div class="mb-6">
+            <button 
+                id="generateRoomBtn" 
+                class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
+                onclick="generateWithDelay('generateRoomBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/room_generated_image.png', 'Your custom room is ready!', onRoomGenerated)">
+                Generate Image
+            </button>
+        
+            <div id="generatedRoomImage" class="mt-4">
+                <div id="loading-indicator" class="hidden">
+                    <div class="flex items-center justify-center space-x-2">
+                        <div class="w-4 h-4 bg-target-red rounded-full animate-pulse"></div>
+                        <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-150"></div>
+                        <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-300"></div>
+                        <span class="ml-2 text-gray-600">Creating your room (this will take about 5 minutes)...</span>
+                    </div>
+                    <div class="mt-4 text-sm text-gray-500">
+                        We're designing your perfect room. This process takes a few seconds as our AI works its magic.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Room Designer Content Areas -->
+        <div id="one-by-one-content" class="space-y-6">
+            <!-- Step 1: Add Banner (initially hidden) -->
+            <div id="add-banner-step" class="hidden mt-4 border rounded-md p-4">
+                <h3 class="text-lg font-semibold mb-2">Add Banner</h3>
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    <img src="https://storage.mtls.cloud.google.com/lj-retail/banner.png" alt="Banner" class="w-full md:w-1/2 h-auto object-contain rounded">
+                    <div class="w-full md:w-1/2">
+                        <p class="mb-4">Add a festive banner to your room to set the tone for your party!</p>
+                        <button 
+                            id="addBannerBtn" 
+                            class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
+                            onclick="generateWithDelay('addBannerBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/img_banner.png', 'Banner added successfully!', onBannerAdded)">
+                            Add Banner
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Step 2: Add Table (initially hidden) -->
+            <div id="add-table-step" class="hidden mt-4 border rounded-md p-4">
+                <h3 class="text-lg font-semibold mb-2">Add Table</h3>
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    <img src="https://storage.mtls.cloud.google.com/lj-retail/Round-Halloween-Tablecloth.png" alt="Table" class="w-full md:w-1/2 h-auto object-contain rounded">
+                    <div class="w-full md:w-1/2">
+                        <p class="mb-4">Add a festive table for food and drinks!</p>
+                        <button 
+                            id="addTableBtn" 
+                            class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
+                            onclick="generateWithDelay('addTableBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/img_banner_table.png', 'Table added successfully!', onTableAdded)">
+                            Add Table
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Add Plates (initially hidden) -->
+            <div id="add-plates-step" class="hidden mt-4 border rounded-md p-4">
+                <h3 class="text-lg font-semibold mb-2">Add Plates</h3>
+                <div class="flex flex-col md:flex-row items-center gap-4">
+                    <img src="https://storage.mtls.cloud.google.com/lj-retail/plates.png" alt="Table" class="w-full md:w-1/2 h-auto object-contain rounded">
+                    <div class="w-full md:w-1/2">
+                        <p class="mb-4">Add festive plates!</p>
+                        <button 
+                            id="addPlatesBtn" 
+                            class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
+                            onclick="generateWithDelay('addPlatesBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/all.png', 'Plates added successfully!', onPlatesAdded)">
+                            Add Plates
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional steps can be added in a similar way -->
+        </div>
+        
+        <div id="all-at-once-content" class="space-y-6 hidden">
+            <h3 class="text-lg font-semibold mb-4">How cool would it be to add them all in one click?</h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md room-item">
+                    <div class="p-4">
+                        <img src="https://storage.mtls.cloud.google.com/lj-retail/room_generated_image.png" alt="Party Room" class="w-full h-48 object-contain">
+                        <p class="text-center mt-2 text-gray-700">Party Room</p>
+                    </div>
+                </div>
+                
+                <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md room-item">
+                    <div class="p-4">
+                        <img src="https://storage.mtls.cloud.google.com/lj-retail/banner.png" alt="Banner" class="w-full h-48 object-contain">
+                        <p class="text-center mt-2 text-gray-700">Banner</p>
+                    </div>
+                </div>
+                
+                <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md room-item">
+                    <div class="p-4">
+                        <img src="https://storage.mtls.cloud.google.com/lj-retail/Round-Halloween-Tablecloth.png" alt="Table" class="w-full h-48 object-contain">
+                        <p class="text-center mt-2 text-gray-700">Table</p>
+                    </div>
+                </div>
+                
+                <div class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md room-item">
+                    <div class="p-4">
+                        <img src="https://storage.mtls.cloud.google.com/lj-retail/plates.png" alt="Plates" class="w-full h-48 object-contain">
+                        <p class="text-center mt-2 text-gray-700">Plates</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button 
+                id="addAllAtOnceBtn"
+                class="room-btn w-full px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
+                onclick="generateWithDelay('addAllAtOnceBtn', 'allAtOnceResult', 'https://storage.mtls.cloud.google.com/lj-retail/all.png', 'Your complete room setup is ready!')">
+                Add All at Once
+            </button>
+            
+            <div id="allAtOnceResult" class="mt-6"></div>
+        </div>
+    </div>
+
+
 {% endblock %}
 
 {% block additional_js %}
@@ -299,12 +504,14 @@
         document.getElementById('image-search-section').classList.add('hidden');
         document.getElementById('video-search-section').classList.add('hidden');
         document.getElementById('product-chat-section').classList.add('hidden');
+        document.getElementById('room-designer-section').classList.add('hidden');
 
         // Reset all tab buttons
         const textTab = document.getElementById('tab-text-search');
         const imageTab = document.getElementById('tab-image-search');
         const videoTab = document.getElementById('tab-video-search');
         const productTab = document.getElementById('product-chat-search');
+        const roomTab = document.getElementById('tab-room-designer');
 
         textTab.classList.remove('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
         textTab.classList.add('text-gray-500', 'bg-gray-50');
@@ -317,6 +524,9 @@
 
         productTab.classList.remove('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
         productTab.classList.add('text-gray-500', 'bg-gray-50');
+        
+        roomTab.classList.remove('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
+        roomTab.classList.add('text-gray-500', 'bg-gray-50');
 
         // Show selected section and highlight tab
         if (tabName === 'text-search') {
@@ -331,15 +541,137 @@
             document.getElementById('video-search-section').classList.remove('hidden');
             videoTab.classList.remove('text-gray-500', 'bg-gray-50');
             videoTab.classList.add('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
-        }else if (tabName === 'product-search') {
+        } else if (tabName === 'product-search') {
             document.getElementById('product-chat-section').classList.remove('hidden');
             productTab.classList.remove('text-gray-500', 'bg-gray-50');
             productTab.classList.add('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
+        } else if (tabName === 'room-designer') {
+            document.getElementById('room-designer-section').classList.remove('hidden');
+            roomTab.classList.remove('text-gray-500', 'bg-gray-50');
+            roomTab.classList.add('text-brand-primary', 'border-b-2', 'border-brand-primary', 'bg-white');
         }
 
         // Clear results area
         document.getElementById('results-area').innerHTML = '';
     }
+    function generateWithDelay(buttonId, targetId, imageUrl, successMessage, callback) {
+        // Show loading indicator in the target div
+        const targetDiv = document.getElementById(targetId);
+        targetDiv.innerHTML = `
+            <div class="loading-indicator">
+                <div class="flex items-center justify-center space-x-2">
+                    <div class="w-4 h-4 bg-target-red rounded-full animate-pulse"></div>
+                    <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-150"></div>
+                    <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-300"></div>
+                    <span class="ml-2 text-gray-600">Creating your room (this will take about 5 minutes)...</span>
+                </div>
+                <div class="mt-4 text-sm text-gray-500">
+                    We're designing your perfect room. This process takes a few minutes as our AI works its magic.
+                </div>
+            </div>
+        `;
+        
+        // Disable the button to prevent multiple clicks
+        const button = document.getElementById(buttonId);
+        button.disabled = true;
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+        
+        // For demo purposes, reduce delay to 3 seconds
+        // In production, use 300000 (5 minutes)
+        setTimeout(function() {
+            // After delay, fetch the generated image
+            fetchImage(buttonId, targetId, imageUrl, successMessage);
+            
+            // Call callback function if provided
+            if (callback && typeof callback === 'function') {
+                callback();
+            }
+        }, 800); 
+    }
+    
+    // Callback for when the room is generated
+    function onRoomGenerated() {
+        // Check if "one by one" tab is active
+        if (!document.getElementById('one-by-one-content').classList.contains('hidden')) {
+            // Show the banner step
+            document.getElementById('add-banner-step').classList.remove('hidden');
+        }
+    }
+    
+    // Callback for when the banner is added
+    function onBannerAdded() {
+        // Hide banner step
+        document.getElementById('add-banner-step').classList.add('hidden');
+        // Show table step
+        document.getElementById('add-table-step').classList.remove('hidden');
+    }
+    
+    // Callback for when the table is added
+    function onTableAdded() {
+        // Hide table step
+        document.getElementById('add-table-step').classList.add('hidden');
+        // Show platet step
+        document.getElementById('add-plates-step').classList.remove('hidden');
+    }
+    
+    function onPlatesAdded() {
+        // Hide table step
+        document.getElementById('add-plates-step').classList.add('hidden');
+        // Show completion message or next step
+        document.getElementById('one-by-one-content').innerHTML += `
+            <div class="mt-4 p-4 bg-green-50 text-green-800 rounded-md">
+                <p class="font-semibold">Room design complete!</p>
+                <p>Your party room has been fully designed with all items.</p>
+            </div>
+        `;
+    }
+    // Modified switchRoomTab function to reset the one-by-one workflow
+    
+    function fetchImage(buttonId, targetId, imageUrl, successMessage) {
+        // Display the image in the target div
+        const targetDiv = document.getElementById(targetId);
+        targetDiv.innerHTML = `
+            <img src="${imageUrl}" alt="Generated Room" class="w-full rounded-md shadow-md">
+            <p class="mt-2 text-center text-gray-700">${successMessage}</p>
+        `;
+        
+        // Re-enable the button
+        const button = document.getElementById(buttonId);
+        button.disabled = false;
+        button.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+    
+    
+    // Function to switch between Room Designer tabs
+    function switchRoomTab(tabName) {
+        // Existing code...
+        document.getElementById('one-by-one-btn').classList.remove('bg-target-red', 'text-white');
+        document.getElementById('one-by-one-btn').classList.add('bg-gray-200', 'text-gray-700');
+        document.getElementById('all-at-once-btn').classList.remove('bg-target-red', 'text-white');
+        document.getElementById('all-at-once-btn').classList.add('bg-gray-200', 'text-gray-700');
+        
+        document.getElementById('one-by-one-content').classList.add('hidden');
+        document.getElementById('all-at-once-content').classList.add('hidden');
+        
+        if (tabName === 'one-by-one') {
+            document.getElementById('one-by-one-btn').classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById('one-by-one-btn').classList.add('bg-target-red', 'text-white');
+            document.getElementById('one-by-one-content').classList.remove('hidden');
+            
+            // Reset the one-by-one workflow
+            document.getElementById('add-banner-step').classList.add('hidden');
+            document.getElementById('add-table-step').classList.add('hidden');
+            document.getElementById('generatedRoomImage').innerHTML = '';
+            
+        } else if (tabName === 'all-at-once') {
+            document.getElementById('all-at-once-btn').classList.remove('bg-gray-200', 'text-gray-700');
+            document.getElementById('all-at-once-btn').classList.add('bg-target-red', 'text-white');
+            document.getElementById('all-at-once-content').classList.remove('hidden');
+        }
+    }
+    
+    
+    // Video and image upload handlers
     document.getElementById('video-upload').addEventListener('change', function(event) {
         const file = event.target.files[0];
         const video = document.getElementById('uploaded-video');
@@ -352,6 +684,7 @@
             video.classList.add('hidden');
         }
     });
+    
     document.getElementById('image-upload').addEventListener('change', function(event) {
         const file = event.target.files[0];
         const image = document.getElementById('uploaded-image');
@@ -362,6 +695,122 @@
         } else {
             image.src = '';
             image.classList.add('hidden');
+        }
+    });
+    
+    // HTMX event listeners for Room Designer
+    document.addEventListener('htmx:afterSwap', function(event) {
+        // Handle Room Designer state changes
+        if (event.detail.target.id === 'generatedRoomImage') {
+            // After generating room image, load furniture options
+            htmx.ajax('GET', '/api/v1/room-designer/furniture-options', {
+                target: '#one-by-one-content',
+                swap: 'innerHTML'
+            });
+        }
+    });
+
+    // ===== VOICE SEARCH FUNCTIONALITY =====
+    
+    // Variables for voice recording
+    let mediaRecorder;
+    let audioChunks = [];
+    let isVoiceRecording = false;
+    
+    // Make handleVoiceRecording function available globally
+    window.handleVoiceRecording = function() {
+        if (isVoiceRecording) {
+            stopVoiceRecording();
+        } else {
+            beginVoiceRecording();
+        }
+    };
+    
+    function beginVoiceRecording() {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Your browser doesn't support voice recording");
+            return;
+        }
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                const voiceSearchBtn = document.getElementById('voice-search-btn');
+                const voiceRecordingStatus = document.getElementById('voice-recording-status');
+                
+                voiceRecordingStatus.classList.remove('hidden');
+                voiceSearchBtn.classList.add('text-target-red');
+                voiceSearchBtn.classList.remove('text-gray-400');
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
+                
+                mediaRecorder.addEventListener("stop", submitVoiceSearch);
+                
+                mediaRecorder.start();
+                isVoiceRecording = true;
+            })
+            .catch(error => {
+                console.error("Error accessing microphone:", error);
+                alert("Could not access your microphone. Please check permissions.");
+            });
+    }
+    
+    function stopVoiceRecording() {
+        if (mediaRecorder && isVoiceRecording) {
+            mediaRecorder.stop();
+            isVoiceRecording = false;
+            
+            const voiceSearchBtn = document.getElementById('voice-search-btn');
+            const voiceRecordingStatus = document.getElementById('voice-recording-status');
+            
+            voiceSearchBtn.classList.remove('text-target-red');
+            voiceSearchBtn.classList.add('text-gray-400');
+            voiceRecordingStatus.textContent = "Processing your speech...";
+        }
+    }
+    
+    function submitVoiceSearch() {
+        // Close all tracks of the stream to turn off the microphone
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+        
+        // Create a file from the audio blob
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        
+        // Create FormData to submit with HTMX
+        const formData = new FormData();
+        formData.append('audio_file', audioBlob, 'voice-search.webm');
+        
+        // Get the limit value from the main form
+        const limitValue = document.getElementById('result-limit').value;
+        formData.append('limit', limitValue);
+        
+        // Hide recording status
+        document.getElementById('voice-recording-status').classList.add('hidden');
+        
+        // Use HTMX to submit the voice search
+        htmx.ajax('POST', '/api/v1/search_by_voice', {
+            target: '#results-area',
+            swap: 'innerHTML',
+            headers: {
+                'X-Brand': 'target'
+            },
+            indicator: '#text-search-indicator',
+            values: formData
+        });
+    }
+    
+    // Initialize voice search button when the document is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        const voiceSearchBtn = document.getElementById('voice-search-btn');
+        if (voiceSearchBtn) {
+            // Replace any existing click handlers
+            voiceSearchBtn.removeEventListener('click', window.startVoiceRecording);
+            // Add our new handler
+            voiceSearchBtn.addEventListener('click', window.handleVoiceRecording);
         }
     });
 </script>

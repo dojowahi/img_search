@@ -7,7 +7,13 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app.api.routes import image_routes, llm_routes, search_routes,product_routes
+from app.api.routes import (
+    creator_routes,
+    image_routes,
+    llm_routes,
+    product_routes,
+    search_routes,
+)
 from app.core.brand import BRAND_CONFIG  # Import BRAND_CONFIG
 from app.core.config import settings  # Import settings
 from app.core.events import shutdown_event, startup_event
@@ -45,6 +51,7 @@ def create_application() -> FastAPI:
     application.include_router(search_routes.router, prefix=settings.API_V1_STR, tags=["Search"])
     application.include_router(llm_routes.router, prefix=settings.API_V1_STR, tags=["LLM"])
     application.include_router(product_routes.router, prefix=settings.API_V1_STR, tags=["Target Product Search"])
+    application.include_router(creator_routes.router, prefix=settings.API_V1_STR, tags=["UI creator"])
 
 
     # Debug information
@@ -102,3 +109,4 @@ async def upload_page(request: Request):
 @app.get("/", response_class=RedirectResponse)
 async def redirect_to_default():
     return RedirectResponse(url="/target")
+

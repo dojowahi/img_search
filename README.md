@@ -8,7 +8,7 @@ This project is a FastAPI-based image search application that uses CLIP embeddin
 *   **Search by Text:** Search for images similar to a text query.
 *   **Search by Image:** Search for images similar to an uploaded image.
 *   **Google Cloud Storage Integration:** Stores images in Google Cloud Storage.
-*   **Vector Database Support:** Supports both ChromaDB and PostgreSQL for storing image embeddings.
+*   **Vector Database Support:** Supports CloudSQL for PostgreSQL for storing image embeddings.
 *   **API Endpoints:** Provides a REST API for interacting with the application.
 
 ## Dependencies
@@ -20,7 +20,6 @@ This project is a FastAPI-based image search application that uses CLIP embeddin
 *   torch
 *   clip
 *   google-cloud-storage
-*   chromadb
 *   pydantic
 *   numpy
 *   python-dotenv
@@ -119,16 +118,10 @@ The application uses Google Cloud Storage to store the uploaded images. You need
 
 ## Vector Database
 
-The application supports two vector database implementations:
-
-*   **ChromaDB:** A lightweight, in-memory vector database.
 *   **PostgreSQL:** A relational database with the pgvector extension for vector storage.
 
 You can configure the vector database type using the `VECTOR_DB_TYPE` environment variable.
 
-### ChromaDB
-
-To use ChromaDB, set the `VECTOR_DB_TYPE` environment variable to `chroma`.
 
 ### PostgreSQL
 
@@ -209,7 +202,7 @@ The application consists of the following main components:
 *   `app/services/storage/gcs.py`: Handles interactions with Google Cloud Storage.
 *   `app/services/embedding.py`: Creates image embeddings.
 *   `app/services/llm_service.py`: Interacts with a Large Language Model.
-*   `app/services/vector_db/chroma.py` or `app/services/vector_db/postgres.py`: Handles interactions with the vector database.
+*   `app/services/vector_db/postgres.py`: Handles interactions with the vector database.
 
 **Image Upload Process:**
 

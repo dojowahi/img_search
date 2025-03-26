@@ -1,3 +1,4 @@
+
 BRAND_CONFIG = {
     "target": {
         "name": "Target",
@@ -23,7 +24,7 @@ BRAND_CONFIG = {
     },
     "thd": {
         "name": "Home Depot",
-        "template_dir": "home_depot",
+        "template_dir": "thd",
         "colors": {
             "primary": "#FF6600",  # Home Depot orange
             "secondary": "#FFFFFF",

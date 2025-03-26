@@ -40,7 +40,6 @@ class Settings(BaseSettings):
     GCS_UPLOADS_PREFIX: str = os.environ.get("GCS_UPLOADS_PREFIX", "uploads/")
     GCS_BKG_IMG_PREFIX:str = os.environ.get("GCS_BKG_IMG_PREFIX", "bkg_img/") 
     UPLOAD_DIR: str = os.environ.get("UPLOAD_DIR", "/home/ankurwahi/python_dev/img_search/tmp_uploads")  # For temporary storage
-    
     # CLIP model settings
     CLIP_MODEL: str = os.environ.get("CLIP_MODEL", "ViT-B/32")
     VERTEX_EMBEDDING_MODEL: str = os.environ.get("VERTEX_EMBEDDING_MODEL", "multimodalembedding@001")

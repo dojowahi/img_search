@@ -3,7 +3,7 @@ uvicorn>=0.21.1
 python-multipart>=0.0.6
 Pillow>=9.5.0
 torch>=2.0.0
-git+https://github.com/openai/CLIP.git 
+# git+https://github.com/openai/CLIP.git 
 google-cloud-storage>=2.8.0  # Include GCS client library
 chromadb>=0.4.6
 pydantic>=1.10.7
@@ -14,3 +14,5 @@ pydantic-settings
 psycopg2-binary
 moviepy
 google-cloud-aiplatform
+sqlalchemy>=2.0.39
+google-cloud-alloydb-connector[pg8000]
