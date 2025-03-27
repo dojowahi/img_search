@@ -346,7 +346,7 @@
                 </div>
                 <div class="ml-3">
                     <p class="text-sm text-gray-800">
-                        Design your perfect room with Target products. Add items one by one or all at once.
+                        Design your perfect room with our products. Add items one by one or all at once.
                     </p>
                 </div>
             </div>
@@ -367,14 +367,14 @@
         <!-- Prompt Section -->
         <div class="mb-6">
             <h3 class="text-lg font-semibold mb-2">Prompt</h3>
-            <p class="text-gray-700">Create an empty party room.</p>
+            <p class="text-gray-700">Create an empty room with large windows.</p>
         </div>
         
         <div class="mb-6">
             <button 
                 id="generateRoomBtn" 
                 class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
-                onclick="generateWithDelay('generateRoomBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/room_generated_image.png', 'Your custom room is ready!', onRoomGenerated)">
+                onclick="generateWithDelay('generateRoomBtn', 'generatedRoomImage', 'https://storage.cloud.google.com/img_search_embed/roombuilder/sunroom.png', 'Your custom room is ready!', onRoomGenerated)">
                 Generate Image
             </button>
         
@@ -397,16 +397,16 @@
         <div id="one-by-one-content" class="space-y-6">
             <!-- Step 1: Add Banner (initially hidden) -->
             <div id="add-banner-step" class="hidden mt-4 border rounded-md p-4">
-                <h3 class="text-lg font-semibold mb-2">Add Banner</h3>
+                <h3 class="text-lg font-semibold mb-2">Add Sofa</h3>
                 <div class="flex flex-col md:flex-row items-center gap-4">
-                    <img src="https://storage.mtls.cloud.google.com/lj-retail/banner.png" alt="Banner" class="w-full md:w-1/2 h-auto object-contain rounded">
+                    <img src="https://storage.cloud.google.com/img_search_embed/roombuilder/fut.jpg" alt="Banner" class="w-full md:w-1/2 h-auto object-contain rounded">
                     <div class="w-full md:w-1/2">
-                        <p class="mb-4">Add a festive banner to your room to set the tone for your party!</p>
+                        <p class="mb-4">Add a sofa to your sunroom!</p>
                         <button 
                             id="addBannerBtn" 
                             class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
-                            onclick="generateWithDelay('addBannerBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/img_banner.png', 'Banner added successfully!', onBannerAdded)">
-                            Add Banner
+                            onclick="generateWithDelay('addBannerBtn', 'generatedRoomImage', 'https://storage.cloud.google.com/img_search_embed/roombuilder/room_futon.png', 'Sofa added successfully!', onBannerAdded)">
+                            Add Sofa
                         </button>
                     </div>
                 </div>
@@ -416,13 +416,13 @@
             <div id="add-table-step" class="hidden mt-4 border rounded-md p-4">
                 <h3 class="text-lg font-semibold mb-2">Add Table</h3>
                 <div class="flex flex-col md:flex-row items-center gap-4">
-                    <img src="https://storage.mtls.cloud.google.com/lj-retail/Round-Halloween-Tablecloth.png" alt="Table" class="w-full md:w-1/2 h-auto object-contain rounded">
+                    <img src="https://storage.cloud.google.com/img_search_embed/roombuilder/table.webp" alt="Table" class="w-full md:w-1/2 h-auto object-contain rounded">
                     <div class="w-full md:w-1/2">
-                        <p class="mb-4">Add a festive table for food and drinks!</p>
+                        <p class="mb-4">Add table !</p>
                         <button 
                             id="addTableBtn" 
                             class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
-                            onclick="generateWithDelay('addTableBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/img_banner_table.png', 'Table added successfully!', onTableAdded)">
+                            onclick="generateWithDelay('addTableBtn', 'generatedRoomImage', 'https://storage.cloud.google.com/img_search_embed/roombuilder/sunroom_futon_table.png', 'Table added successfully!', onTableAdded)">
                             Add Table
                         </button>
                     </div>
@@ -433,14 +433,14 @@
             <div id="add-plates-step" class="hidden mt-4 border rounded-md p-4">
                 <h3 class="text-lg font-semibold mb-2">Add Plates</h3>
                 <div class="flex flex-col md:flex-row items-center gap-4">
-                    <img src="https://storage.mtls.cloud.google.com/lj-retail/plates.png" alt="Table" class="w-full md:w-1/2 h-auto object-contain rounded">
+                    <img src="https://storage.cloud.google.com/img_search_embed/roombuilder/whitevase.jpg" alt="Table" class="w-full md:w-1/2 h-auto object-contain rounded">
                     <div class="w-full md:w-1/2">
-                        <p class="mb-4">Add festive plates!</p>
+                        <p class="mb-4">Add vase!</p>
                         <button 
                             id="addPlatesBtn" 
                             class="room-btn px-4 py-2 bg-target-red text-white rounded-md shadow-sm"
-                            onclick="generateWithDelay('addPlatesBtn', 'generatedRoomImage', 'https://storage.mtls.cloud.google.com/lj-retail/all.png', 'Plates added successfully!', onPlatesAdded)">
-                            Add Plates
+                            onclick="generateWithDelay('addPlatesBtn', 'generatedRoomImage', 'https://storage.cloud.google.com/img_search_embed/roombuilder/all.png', 'Vase added successfully!', onPlatesAdded)">
+                            Add Vase
                         </button>
                     </div>
                 </div>
@@ -563,7 +563,7 @@
                     <div class="w-4 h-4 bg-target-red rounded-full animate-pulse"></div>
                     <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-150"></div>
                     <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-300"></div>
-                    <span class="ml-2 text-gray-600">Creating your room (this will take about 5 minutes)...</span>
+                    <span class="ml-2 text-gray-600">Creating your room...</span>
                 </div>
                 <div class="mt-4 text-sm text-gray-500">
                     We're designing your perfect room. This process takes a few minutes as our AI works its magic.
