@@ -12,6 +12,7 @@ from moviepy.video.io.VideoFileClip import VideoFileClip
 from PIL import Image
 
 from app.core.brand import BRAND_CONFIG
+from app.core.config import settings
 from app.models.schemas import SearchResult, VideoSearchResponse
 from app.services.embedding_model import get_embedding_service
 from app.services.llm_service import llm_service
@@ -133,6 +134,8 @@ async def video_analysis(request: Request,
     - Finds similar products in the Vector DB
         
     """
+   data ={}
+   total_product = 0
    try:
         brand = request.headers.get("X-Brand", "target")
         if not file.content_type.startswith("video/"):
@@ -168,12 +171,16 @@ async def video_analysis(request: Request,
                 Please output your findings as a list of timestamps with brief descriptions of the product shown at that time (if identifiable).
                 """
         # response_schema = {"type":"object","properties":{"video_description":{"type":"string","description":"What is this video about"},"transcribe":{"type":"string","description":"Complete audio to text transcription of the video"},"productable":{"type":"array","maxItems":3,"minItems":1,"items":{"type":"object","properties":{"name":{"type":"string","description":"Name of the product being discussed"},"timestamp":{"type":"string","description":"timestamp in the  video when the product is clearly visible"},"details":{"type":"string","description":"ALl details about the product mentioned in the video"}},"required":["name","timestamp","details"]},"description":"Table listing product details"}},"required":["video_description","productable"]}        
-        fast_response_schema = {"type":"object","properties":{"video_description":{"type":"string","description":"What is this video about"},"productable":{"type":"array","maxItems":3,"minItems":1,"items":{"type":"object","properties":{"name":{"type":"string","description":"Name of the product being discussed"},"timestamp":{"type":"string","description":"timestamp in the  video when the product is clearly visible"},"details":{"type":"string","description":"ALl details about the product mentioned in the video"}},"required":["name","timestamp","details"]},"description":"Table listing product details"}},"required":["video_description","productable"]}        
+        fast_response_schema = {"type":"object","properties":{"video_description":{"type":"string","description":"What is this video about"},"productable":{"type":"array","maxItems":5,"minItems":1,"items":{"type":"object","properties":{"name":{"type":"string","description":"Name of the product being discussed"},"timestamp":{"type":"string","description":"timestamp in the  video when the product is clearly visible"},"details":{"type":"string","description":"ALl details about the product mentioned in the video"}},"required":["name","timestamp","details"]},"description":"Table listing product details"}},"required":["video_description","productable"]}        
 
         tags_json = await llm_service.video_analysis(gcs_path,prompt,fast_response_schema)
         data = json.loads(tags_json)
+        logger.info(f"Video product img:{data}")
         total_product = len(data['productable'])
-
+        if settings.DEMO_MODE == 1:
+            data = {"productable":[{"name":"Shorts","timestamp":"00:00:03","details":"The influencer is showcasing a pair of casual shorts with a drawstring. They appear to be made of a soft, possibly cotton-blend, material. The shorts are high-waisted and have a relaxed fit."},{"name":"Tank top","timestamp":"00:00:08","details":"The influencer presents a white ribbed tank top, which she pairs with the previously shown shorts."},{"name":"Striped shirt","timestamp":"00:00:16","details":"The influencer presents a vertically striped, long-sleeved shirt. The shirt seems to be lightweight and possibly made of linen or a similar breathable fabric."},{"name":"White shorts","timestamp":"00:00:21","details":"The influencer transitions to showcasing a pair of tailored white shorts. These shorts appear to be a more structured style compared to the initial pair, with a defined waistband and potentially a more fitted silhouette. "},{"name":"Beige sweater","timestamp":"00:00:24","details":"The influencer presents a beige, knit sweater, styled to complement the white shorts.  The sweater has a relaxed fit. The knit appears fairly open."}],"video_description":"The video features an influencer showcasing various clothing items, including shorts, tops, and sweaters, and providing outfit suggestions for each."}
+            total_product = 5
+            
         if total_product > 1:
             pdct_dtl_1 = data['productable'][total_product -1]['details']
             pdct_tmstmp_1 = data['productable'][total_product -1]['timestamp']
@@ -197,7 +204,7 @@ async def video_analysis(request: Request,
         frame_filename = f"{vid_id}-frame.jpg"
         frame_file_id, frame_gcs_path = gcs_storage_service.store_file(frame_file_path, frame_filename)
         
-        logger.info(f"LLM output:{tags_json}") 
+        # logger.info(f"LLM output:{tags_json}") 
         logger.info(f"Frame path:{frame_file_path}") 
         logger.info(f"Frame GCS path:{frame_gcs_path}") 
         vector_db_service = get_vector_db_service()

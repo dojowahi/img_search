@@ -13,6 +13,7 @@
 # Environment and local configuration
 .env
 .env.*
+**/.env
 venv
 env
 __pycache__
@@ -22,6 +23,8 @@ __pycache__
 .coverage
 htmlcov
 .mypy_cache
+**/*.pyc
+
 
 # Local storage directories
 uploads/
@@ -30,7 +33,7 @@ chroma_db/
 tmp/
 tmp_uploads/
 .DS_Store
-
+**/__pycache__/*
 # Logs
 *.log
 logs/
@@ -57,12 +60,6 @@ tests/
 
 # Large data files and credentials
 data/
-key.json
-*key*.json
-credentials/
-bulk_*.json
-*.json
-!requirements.json
 
 # Build artifacts
 *.egg-info/

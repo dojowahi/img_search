@@ -6,8 +6,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
     wget \
-    git \
-    curl \
+#     git \
+#     curl \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -21,6 +21,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# COPY gen-ai-4all-115a57d466b1-jun2.json .
 # Copy application code
 COPY . .
 

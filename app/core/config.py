@@ -30,12 +30,12 @@ class Settings(BaseSettings):
     APP_NAME: str = "Image Search API"
     API_V1_STR: str = "/api/v1"
     GEMINI_MODEL:str = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
-    
+    DEMO_MODE:int = 1
     # GCP settings
     GCP_PROJECT_ID: str = os.environ.get("GCP_PROJECT_ID", "gen-ai-4all")
     GCP_REGION: str = os.environ.get("GCP_REGION", "us-central1")
     GCS_SIGNED_URL_EXPIRATION_MINUTES: int = int(os.environ.get("GCS_SIGNED_URL_EXPIRATION_MINUTES", "2"))
-    GCP_SERVICE_ACCOUNT_FILE: Optional[str] = os.environ.get("GCP_SERVICE_ACCOUNT_FILE")
+    GCP_SERVICE_ACCOUNT_FILE: Optional[str] = os.environ.get("GCP_SERVICE_ACCOUNT_FILE","/app/gen-ai-4all-115a57d466b1-jun2.json")
     GCS_BUCKET_NAME: str = os.environ.get("GCS_BUCKET_NAME", "img_search_embed")
     GCS_UPLOADS_PREFIX: str = os.environ.get("GCS_UPLOADS_PREFIX", "uploads/")
     GCS_BKG_IMG_PREFIX:str = os.environ.get("GCS_BKG_IMG_PREFIX", "bkg_img/") 
