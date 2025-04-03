@@ -51,7 +51,11 @@ async def '"${comp_abbv}"'(request: Request):
 
 '
 
-echo "$python_code" >> ${app_dir}/main.py
+if [[ ${app_dir} == /app/app* ]]; then
+  echo "$python_code" >> /app/main.py
+else
+  echo "$python_code" >> ${app_dir}/main.py
+fi
 
 # # Check if the copy was successful
 if [ $? -eq 0 ]; then

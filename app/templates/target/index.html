@@ -384,7 +384,7 @@
                         <div class="w-4 h-4 bg-target-red rounded-full animate-pulse"></div>
                         <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-150"></div>
                         <div class="w-4 h-4 bg-target-red rounded-full animate-pulse delay-300"></div>
-                        <span class="ml-2 text-gray-600">Creating your room (this will take about 5 minutes)...</span>
+                        <span class="ml-2 text-gray-600">Creating your room...</span>
                     </div>
                     <div class="mt-4 text-sm text-gray-500">
                         We're designing your perfect room. This process takes a few seconds as our AI works its magic.
@@ -566,7 +566,7 @@
                     <span class="ml-2 text-gray-600">Creating your room...</span>
                 </div>
                 <div class="mt-4 text-sm text-gray-500">
-                    We're designing your perfect room. This process takes a few minutes as our AI works its magic.
+                    We're designing your perfect room. This process takes a few seconds as our AI works its magic.
                 </div>
             </div>
         `;
@@ -586,7 +586,7 @@
             if (callback && typeof callback === 'function') {
                 callback();
             }
-        }, 800); 
+        }, 1200); 
     }
     
     // Callback for when the room is generated
@@ -699,16 +699,16 @@
     });
     
     // HTMX event listeners for Room Designer
-    document.addEventListener('htmx:afterSwap', function(event) {
-        // Handle Room Designer state changes
-        if (event.detail.target.id === 'generatedRoomImage') {
-            // After generating room image, load furniture options
-            htmx.ajax('GET', '/api/v1/room-designer/furniture-options', {
-                target: '#one-by-one-content',
-                swap: 'innerHTML'
-            });
-        }
-    });
+    // document.addEventListener('htmx:afterSwap', function(event) {
+    //     // Handle Room Designer state changes
+    //     if (event.detail.target.id === 'generatedRoomImage') {
+    //         // After generating room image, load furniture options
+    //         htmx.ajax('GET', '/api/v1/room-designer/furniture-options', {
+    //             target: '#one-by-one-content',
+    //             swap: 'innerHTML'
+    //         });
+    //     }
+    // });
 
     // ===== VOICE SEARCH FUNCTIONALITY =====
     
@@ -738,6 +738,7 @@
                 const voiceRecordingStatus = document.getElementById('voice-recording-status');
                 
                 voiceRecordingStatus.classList.remove('hidden');
+                voiceRecordingStatus.textContent = "Recording... Click the microphone to stop";
                 voiceSearchBtn.classList.add('text-target-red');
                 voiceSearchBtn.classList.remove('text-gray-400');
                 
@@ -748,7 +749,7 @@
                     audioChunks.push(event.data);
                 });
                 
-                mediaRecorder.addEventListener("stop", submitVoiceSearch);
+                mediaRecorder.addEventListener("stop", processVoiceRecording);
                 
                 mediaRecorder.start();
                 isVoiceRecording = true;
@@ -773,14 +774,14 @@
         }
     }
     
-    function submitVoiceSearch() {
+    function processVoiceRecording() {
         // Close all tracks of the stream to turn off the microphone
         mediaRecorder.stream.getTracks().forEach(track => track.stop());
         
         // Create a file from the audio blob
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         
-        // Create FormData to submit with HTMX
+        // Create FormData to submit to get transcription
         const formData = new FormData();
         formData.append('audio_file', audioBlob, 'voice-search.webm');
         
@@ -788,18 +789,47 @@
         const limitValue = document.getElementById('result-limit').value;
         formData.append('limit', limitValue);
         
-        // Hide recording status
-        document.getElementById('voice-recording-status').classList.add('hidden');
+        const voiceRecordingStatus = document.getElementById('voice-recording-status');
         
-        // Use HTMX to submit the voice search
-        htmx.ajax('POST', '/api/v1/search_by_voice', {
-            target: '#results-area',
-            swap: 'innerHTML',
+        // Use HTMX to send the voice recording and get transcription
+        htmx.ajax('POST', '/api/v1/search_by_voice?transcribe_only=true', {
             headers: {
                 'X-Brand': 'target'
             },
             indicator: '#text-search-indicator',
-            values: formData
+            values: formData,
+            handler: function(resp) {
+                try {
+                    // Parse the response to get the transcription
+                    const data = JSON.parse(resp);
+                    
+                    if (data.transcription) {
+                        // Update the query input with the transcription
+                        const queryInput = document.getElementById('query');
+                        queryInput.value = data.transcription;
+                        
+                        // Update status message
+                        voiceRecordingStatus.textContent = "Transcribed: " + data.transcription;
+                        
+                        // Hide the status message after a few seconds
+                        setTimeout(() => {
+                            voiceRecordingStatus.classList.add('hidden');
+                        }, 5000);
+                    } else {
+                        // Handle error
+                        voiceRecordingStatus.textContent = "Could not transcribe audio. Please try again.";
+                        setTimeout(() => {
+                            voiceRecordingStatus.classList.add('hidden');
+                        }, 3000);
+                    }
+                } catch (error) {
+                    console.error("Error processing transcription:", error);
+                    voiceRecordingStatus.textContent = "Error processing speech. Please try again.";
+                    setTimeout(() => {
+                        voiceRecordingStatus.classList.add('hidden');
+                    }, 3000);
+                }
+            }
         });
     }
     
@@ -807,9 +837,6 @@
     document.addEventListener('DOMContentLoaded', function() {
         const voiceSearchBtn = document.getElementById('voice-search-btn');
         if (voiceSearchBtn) {
-            // Replace any existing click handlers
-            voiceSearchBtn.removeEventListener('click', window.startVoiceRecording);
-            // Add our new handler
             voiceSearchBtn.addEventListener('click', window.handleVoiceRecording);
         }
     });
