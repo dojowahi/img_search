@@ -70,6 +70,8 @@ class LLMService:
                     ),
                 )
                 answer = response.text
+                logger.info(f"Answer type:{type(answer)}")
+                logger.info(f"Controlled answer:{answer}")
                 return answer
         
         except Exception as e:

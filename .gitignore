@@ -19,7 +19,7 @@ tmp_uploads/
 pyproject*
 .python-version
 uv.lock
-*.json
+# *.json
 deploy.sh
 bulk_load.sh
 **/env*

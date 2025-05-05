@@ -18,7 +18,7 @@ class TargetProductAPI:
             print(f"API Error: {e}")
             return None
 
-    def search_products(self, keyword="shoes", count="2",store_id="862"):
+    def search_products(self, keyword="shoes", count="3",store_id="862"):
         url = "https://target-com-shopping-api.p.rapidapi.com/product_search"
         params = {"store_id": store_id, "keyword": keyword, "count": count, "offset": "0"}
         return self._get_json(url, params)

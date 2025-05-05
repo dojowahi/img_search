@@ -27,7 +27,7 @@ def decode_html_entities(s):
 templates.env.filters["decode_html"] = decode_html_entities
 
 @router.get("/search/")
-async def search_products_endpoint(request: Request, query: str,storeId:str, count:int =2):
+async def search_products_endpoint(request: Request, query: str,storeId:str, count:int =3):
 
     brand = request.headers.get("X-Brand", "target")
 
@@ -114,7 +114,7 @@ async def get_product_details_endpoint(request: Request,tcin:str,storeId:str = Q
         # details = json.loads(details)
         
         prompt = f"""Use the product details to generate a FAQ. Product details:{prod_specific_info} """
-        response_schema = {"type":"object","properties":{"FAQ":{"type":"array","maxItems":5,"minItems":5,"items":{"type":"object","properties":{"Question":{"type":"string"},"Answer":{"type":"string"}},"description":"Generate questions and answers based on the product details"},"required":["Question","Answer"]}},"required":["FAQ"]}
+        response_schema = {"type":"object","properties":{"FAQ":{"type":"array","maxItems":5,"minItems":5,"items":{"type":"object","properties":{"Question":{"type":"string","description":"Generate a single question based on product details"},"Answer":{"type":"string","description":"Generate an answer for the question based on product details"}},"description":"Generate question and answer based on the product details"},"required":["Question","Answer"]}},"required":["FAQ"]}
         # response_schema = {"type":"object","properties":{"ProductText":{"type":"string","description":"ANalyze the JSON which is part of the prompt and convert it to a coherent report with all the details. No details in the JSON should be skipped"},"FAQ":{"type":"array","maxItems":5,"minItems":5,"items":{"type":"object","properties":{"Question":{"type":"string"},"Answer":{"type":"string"}},"description":"Generate questions and answers based on the product details"},"required":["Question","Answer"]}},"required":["FAQ","ProductText"]}        
         response = await llm_service.gemini_text(prompt=prompt,response_schema=response_schema)
         # faq_data = {
